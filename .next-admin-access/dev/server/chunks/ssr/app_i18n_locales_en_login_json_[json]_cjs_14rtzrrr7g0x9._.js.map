@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/login.json"],"sourcesContent":["{\"title\":\"Welcome back\",\"eyebrow\":\"A-FRAME KG\",\"description\":\"Sign in to continue planning your escape.\"}"],"names":[],"mappings":""}}]
+}

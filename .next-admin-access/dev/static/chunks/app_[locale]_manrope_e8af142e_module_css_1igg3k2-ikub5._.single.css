@@ -1,0 +1,26 @@
+/* [project]/app/[locale]/manrope_e8af142e.module.css [app-client] (css) */
+@font-face {
+  font-family: manrope;
+  src: url("../media/manrope_variable-s.p.3rjk17h6oms_8.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 200 800;
+}
+
+@font-face {
+  font-family: manrope Fallback;
+  src: local(Arial);
+  ascent-override: 106.45%;
+  descent-override: 29.96%;
+  line-gap-override: 0.0%;
+  size-adjust: 100.14%;
+}
+
+.manrope_e8af142e-module__6JBrvW__className {
+  font-family: manrope, manrope Fallback;
+}
+
+.manrope_e8af142e-module__6JBrvW__variable {
+  --font-manrope: "manrope", "manrope Fallback";
+}
+
+/*# sourceMappingURL=app_%5Blocale%5D_manrope_e8af142e_module_css_1igg3k2-ikub5._.single.css.map*/

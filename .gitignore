@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/.npm-cache/
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,10 +13,21 @@
 
 # testing
 /coverage
+/test-results/
+/pwa-test-results/
+/test-results-forms/
+/.next-forms-qa-production/
+/.next-forms-qa-dev/
+/playwright-report/
 
 # next.js
 /.next/
+/.next-e2e/
+/.next-e2e-production/
+/.next-pwa/
 /out/
+/public/sw.js
+/public/sw-pwa.js
 
 # production
 /build
@@ -32,6 +44,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# generated Prisma client
+/generated/prisma/
+/.uploads/
 
 # vercel
 .vercel

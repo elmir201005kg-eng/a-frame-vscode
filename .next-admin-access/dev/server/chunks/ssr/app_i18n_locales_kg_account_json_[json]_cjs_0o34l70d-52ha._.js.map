@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/account.json"],"sourcesContent":["{\"title\":\"Эс алуу пландарыңыз\",\"eyebrow\":\"ЖЕКЕ КАБИНЕТ\",\"description\":\"Брондор, жаккан жайлар жана маанилүү билдирүүлөр — бир жерде.\"}"],"names":[],"mappings":""}}]
+}

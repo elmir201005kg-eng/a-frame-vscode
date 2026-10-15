@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/register.json"],"sourcesContent":["{\"title\":\"Таанышуудан баштайлы\",\"eyebrow\":\"АККАУНТ ТҮЗҮҢҮЗ\",\"description\":\"Үйлөрдү сактаңыз, эс алууну брондоңуз жана сапарларды башкарыңыз.\"}"],"names":[],"mappings":""}}]
+}

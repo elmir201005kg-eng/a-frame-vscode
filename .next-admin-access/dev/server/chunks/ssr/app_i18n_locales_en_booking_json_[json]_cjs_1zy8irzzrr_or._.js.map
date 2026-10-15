@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/booking.json"],"sourcesContent":["{\"title\":\"Plan your stay\",\"eyebrow\":\"BOOKING\",\"description\":\"Check your dates and share your contact details. Your host will confirm the request.\"}"],"names":[],"mappings":""}}]
+}

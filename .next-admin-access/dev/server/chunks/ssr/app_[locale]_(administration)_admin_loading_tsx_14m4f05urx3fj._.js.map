@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/ASUS/OneDrive/Desktop/a-frame-vscode/app/[locale]/(administration)/admin/loading.tsx"],"sourcesContent":["import { AdminSkeleton } from \"@/components/admin-skeleton\";\nexport default function Loading() { return <AdminSkeleton />; }\n"],"names":["Loading"],"mappings":";;;;;AAAA;;;AACe,SAASA;IAAY,qBAAO,8OAAC,iJAAa;;;;;AAAK"}}]
+}

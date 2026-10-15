@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/booking.json"],"sourcesContent":["{\"title\":\"Спланируем ваш отдых\",\"eyebrow\":\"БРОНИРОВАНИЕ\",\"description\":\"Проверьте даты и оставьте контакты. Хозяин подтвердит вашу заявку.\"}"],"names":[],"mappings":""}}]
+}

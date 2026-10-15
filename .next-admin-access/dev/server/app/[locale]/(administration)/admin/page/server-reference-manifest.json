@@ -1,0 +1,35 @@
+{
+  "node": {
+    "8000e2fee4e78153f33e2edab13a0d55b804a9991f": {
+      "workers": {
+        "app/[locale]/(administration)/admin/page": {
+          "moduleId": "[project]/.next-internal/server/app/[locale]/(administration)/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/brand-icon.tsx [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/app/i18n/platform.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/app/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true
+        }
+      },
+      "exportedName": "$$RSC_SERVER_CACHE_0",
+      "filename": "lib/brand-icon.tsx"
+    },
+    "c0130e25352699b04279cf2bf9c48a46b6d58579eb": {
+      "workers": {
+        "app/[locale]/(administration)/admin/page": {
+          "moduleId": "[project]/.next-internal/server/app/[locale]/(administration)/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/brand-icon.tsx [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/app/i18n/platform.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/app/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true
+        }
+      },
+      "exportedName": "$$RSC_SERVER_CACHE_0",
+      "filename": "app/i18n/platform.ts"
+    },
+    "605442e436952dcbd9a9ae7abf2a334bdacfb7deec": {
+      "workers": {
+        "app/[locale]/(administration)/admin/page": {
+          "moduleId": "[project]/.next-internal/server/app/[locale]/(administration)/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/lib/brand-icon.tsx [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/app/i18n/platform.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/app/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": true
+        }
+      },
+      "exportedName": "logoutFormAction",
+      "filename": "app/actions/auth.ts"
+    }
+  },
+  "edge": {}
+}

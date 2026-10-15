@@ -1,0 +1,607 @@
+// A-FRAME KG: all 21 entities from Схема БД.md.
+// Connection settings live in prisma.config.ts (Prisma ORM 7).
+// SQL-only constraints are included in prisma/migrations; apply migrations,
+// rather than db push, to retain booking overlap and data integrity checks.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  OWNER
+  ADMIN
+  SUPER_ADMIN
+
+  @@map("user_role")
+}
+
+enum OwnerVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+
+  @@map("owner_verification_status")
+}
+
+enum CabinStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  BLOCKED
+  ARCHIVED
+
+  @@map("cabin_status")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  REJECTED
+
+  @@map("booking_status")
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+
+  @@map("availability_status")
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  HIDDEN
+
+  @@map("review_status")
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+
+  @@map("discount_type")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+
+  @@map("payment_status")
+}
+
+enum PayoutStatus {
+  PENDING
+  PAID
+  CANCELLED
+
+  @@map("payout_status")
+}
+
+model User {
+  id              BigInt   @id @default(autoincrement())
+  firstName       String   @map("first_name") @db.VarChar(100)
+  lastName        String?  @map("last_name") @db.VarChar(100)
+  email           String   @unique @db.VarChar(255)
+  phone           String?  @db.VarChar(30)
+  passwordHash    String?  @map("password_hash") @db.VarChar(255)
+  role            UserRole @default(USER)
+  avatarUrl       String?  @map("avatar_url") @db.Text
+  isActive        Boolean  @default(true) @map("is_active")
+  isVerified      Boolean  @default(false) @map("is_verified")
+  preferredLocale String   @default("ru") @map("preferred_locale") @db.VarChar(2)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  ownerProfile        OwnerProfile?
+  favorites           Favorite[]
+  bookings            Booking[]
+  reviews             Review[]
+  notifications       Notification[]
+  searchHistory       SearchHistory[]
+  payments            Payment[]
+  cabinViews          CabinView[]
+  auditLogs           AuditLog[]
+  sessions            Session[]
+  googleAccount       GoogleAccount?
+  adminLoginChallenge AdminLoginChallenge?
+
+  @@map("users")
+}
+
+model GoogleAccount {
+  id        BigInt   @id @default(autoincrement())
+  subject   String   @unique @db.VarChar(255)
+  userId    BigInt   @unique @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("google_accounts")
+}
+
+model OwnerProfile {
+  id                 BigInt                  @id @default(autoincrement())
+  userId             BigInt                  @unique @map("user_id")
+  businessName       String?                 @map("business_name") @db.VarChar(255)
+  description        String?                 @db.Text
+  contactPhone       String?                 @map("contact_phone") @db.VarChar(30)
+  verificationStatus OwnerVerificationStatus @default(PENDING) @map("verification_status")
+  createdAt          DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  cabins  Cabin[]
+  payouts OwnerPayout[]
+
+  @@map("owner_profiles")
+}
+
+model Region {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  slug      String   @unique @db.VarChar(100)
+  nameKg    String?  @map("name_kg") @db.VarChar(100)
+  nameEn    String?  @map("name_en") @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  locations     Location[]
+  searchHistory SearchHistory[]
+
+  @@map("regions")
+}
+
+model Location {
+  id        BigInt   @id @default(autoincrement())
+  regionId  Int      @map("region_id")
+  city      String?  @db.VarChar(150)
+  village   String?  @db.VarChar(150)
+  address   String   @db.Text
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  region Region  @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  cabins Cabin[]
+
+  @@index([regionId])
+  @@map("locations")
+}
+
+model Cabin {
+  id                BigInt      @id @default(autoincrement())
+  ownerId           BigInt      @map("owner_id")
+  locationId        BigInt      @map("location_id")
+  title             String      @db.VarChar(255)
+  slug              String      @unique @db.VarChar(255)
+  description       String      @db.Text
+  titleKg           String?     @map("title_kg") @db.VarChar(255)
+  titleEn           String?     @map("title_en") @db.VarChar(255)
+  descriptionKg     String?     @map("description_kg") @db.Text
+  descriptionEn     String?     @map("description_en") @db.Text
+  checkInTime       String      @default("14:00") @map("check_in_time") @db.VarChar(5)
+  checkOutTime      String      @default("11:00") @map("check_out_time") @db.VarChar(5)
+  cancellationHours Int         @default(48) @map("cancellation_hours")
+  isDemo            Boolean     @default(false) @map("is_demo")
+  pricePerNight     Decimal     @map("price_per_night") @db.Decimal(10, 2)
+  maxGuests         Int         @map("max_guests")
+  bedrooms          Int         @default(1)
+  beds              Int         @default(1)
+  bathrooms         Int         @default(1)
+  // Cached aggregates of PUBLISHED reviews; update in the same transaction.
+  rating            Decimal     @default(0) @db.Decimal(2, 1)
+  reviewsCount      Int         @default(0) @map("reviews_count")
+  status            CabinStatus @default(DRAFT)
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  // owner_id refers to owner_profiles.id, not users.id.
+  owner        OwnerProfile        @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  location     Location            @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  images       CabinImage[]
+  amenities    CabinAmenity[]
+  rules        CabinRule[]
+  favorites    Favorite[]
+  bookings     Booking[]
+  availability CabinAvailability[]
+  reviews      Review[]
+  promotions   Promotion[]
+  views        CabinView[]
+  categories   CabinCategory[]
+
+  @@index([ownerId, status])
+  @@index([locationId, status])
+  @@index([status, pricePerNight])
+  @@index([status, maxGuests])
+  @@index([status, rating])
+  @@map("cabins")
+}
+
+model CabinImage {
+  id        BigInt   @id @default(autoincrement())
+  cabinId   BigInt   @map("cabin_id")
+  imageUrl  String   @map("image_url") @db.Text
+  altText   String?  @map("alt_text") @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
+  // At most one main image per cabin is enforced by a partial SQL index.
+  isMain    Boolean  @default(false) @map("is_main")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  cabin Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+
+  @@index([cabinId, sortOrder])
+  @@map("cabin_images")
+}
+
+model Category {
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(100)
+  nameKg   String? @map("name_kg") @db.VarChar(100)
+  nameEn   String? @map("name_en") @db.VarChar(100)
+  slug     String  @unique @db.VarChar(100)
+  isActive Boolean @default(true) @map("is_active")
+  cabins   CabinCategory[]
+
+  @@map("categories")
+}
+
+model CabinCategory {
+  cabinId    BigInt @map("cabin_id")
+  categoryId Int    @map("category_id")
+  cabin      Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([cabinId, categoryId])
+  @@index([categoryId, cabinId])
+  @@map("cabin_categories")
+}
+
+model Amenity {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique @db.VarChar(100)
+  slug     String  @unique @db.VarChar(100)
+  nameKg   String? @map("name_kg") @db.VarChar(100)
+  nameEn   String? @map("name_en") @db.VarChar(100)
+  icon     String? @db.VarChar(100)
+  isActive Boolean @default(true) @map("is_active")
+
+  cabins CabinAmenity[]
+
+  @@map("amenities")
+}
+
+model CabinAmenity {
+  cabinId   BigInt @map("cabin_id")
+  amenityId Int    @map("amenity_id")
+
+  cabin   Cabin   @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Restrict)
+
+  @@id([cabinId, amenityId])
+  @@index([amenityId, cabinId])
+  @@map("cabin_amenities")
+}
+
+model CabinRule {
+  id          BigInt   @id @default(autoincrement())
+  cabinId     BigInt   @map("cabin_id")
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  cabin Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+
+  @@index([cabinId, isActive])
+  @@map("cabin_rules")
+}
+
+model Favorite {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  cabinId   BigInt   @map("cabin_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cabin Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cabinId])
+  @@index([userId, createdAt])
+  @@index([cabinId])
+  @@map("favorites")
+}
+
+model Booking {
+  id                 BigInt        @id @default(autoincrement())
+  bookingNumber      String        @unique @map("booking_number") @db.VarChar(30)
+  requestKey         String?       @unique @map("request_key") @db.VarChar(36)
+  pricingDetails     Json?         @map("pricing_details") @db.JsonB
+  cancelUntil        DateTime?     @map("cancel_until") @db.Timestamptz(3)
+  userId             BigInt        @map("user_id")
+  cabinId            BigInt        @map("cabin_id")
+  checkIn            DateTime      @map("check_in") @db.Date
+  checkOut           DateTime      @map("check_out") @db.Date
+  guestsCount        Int           @map("guests_count")
+  // Contact details and prices are immutable snapshots for this booking.
+  guestName          String        @map("guest_name") @db.VarChar(200)
+  guestPhone         String        @map("guest_phone") @db.VarChar(30)
+  guestEmail         String?       @map("guest_email") @db.VarChar(255)
+  pricePerNight      Decimal       @map("price_per_night") @db.Decimal(10, 2)
+  nights             Int
+  subtotal           Decimal       @db.Decimal(10, 2)
+  discountAmount     Decimal       @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  serviceFee         Decimal       @default(0) @map("service_fee") @db.Decimal(10, 2)
+  totalAmount        Decimal       @map("total_amount") @db.Decimal(10, 2)
+  status             BookingStatus @default(PENDING)
+  cancellationReason String?       @map("cancellation_reason") @db.Text
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  cabin         Cabin          @relation(fields: [cabinId], references: [id], onDelete: Restrict)
+  review        Review?
+  notifications Notification[]
+  payments      Payment[]
+  ownerPayouts  OwnerPayout[]
+
+  // Composite keys bind reviews/payments to the actual booking guest/cabin.
+  @@unique([id, userId])
+  @@unique([id, userId, cabinId])
+  @@index([userId, createdAt])
+  @@index([cabinId, status, checkIn, checkOut])
+  @@index([status, checkOut])
+  @@map("bookings")
+}
+
+model CabinAvailability {
+  id      BigInt             @id @default(autoincrement())
+  cabinId BigInt             @map("cabin_id")
+  date    DateTime           @db.Date
+  // Sparse calendar: no row means the cabin's default price/availability.
+  status  AvailabilityStatus @default(AVAILABLE)
+  price   Decimal?           @db.Decimal(10, 2)
+  note    String?            @db.Text
+
+  cabin Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+
+  @@unique([cabinId, date])
+  @@index([date, status])
+  @@map("cabin_availability")
+}
+
+model Review {
+  id        BigInt       @id @default(autoincrement())
+  userId    BigInt       @map("user_id")
+  cabinId   BigInt       @map("cabin_id")
+  bookingId BigInt       @unique @map("booking_id")
+  rating    Int
+  text      String       @db.Text
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  cabin   Cabin         @relation(fields: [cabinId], references: [id], onDelete: Restrict)
+  booking Booking       @relation(fields: [bookingId, userId, cabinId], references: [id, userId, cabinId], onDelete: Restrict)
+  images  ReviewImage[]
+
+  // Required by the composite one-to-one relation in Prisma.
+  @@unique([bookingId, userId, cabinId])
+  @@index([userId, createdAt])
+  @@index([cabinId, status, createdAt])
+  @@map("reviews")
+}
+
+model ReviewImage {
+  id        BigInt   @id @default(autoincrement())
+  reviewId  BigInt   @map("review_id")
+  imageUrl  String   @map("image_url") @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@map("review_images")
+}
+
+model Notification {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  type      String   @db.VarChar(50)
+  title     String   @db.VarChar(255)
+  message   String   @db.Text
+  data      Json?    @db.JsonB
+  bookingId BigInt?  @map("booking_id")
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead, createdAt])
+  @@index([bookingId])
+  @@map("notifications")
+}
+
+model SearchHistory {
+  id          BigInt    @id @default(autoincrement())
+  userId      BigInt    @map("user_id")
+  regionId    Int?      @map("region_id")
+  checkIn     DateTime? @map("check_in") @db.Date
+  checkOut    DateTime? @map("check_out") @db.Date
+  guestsCount Int?      @map("guests_count")
+  minPrice    Decimal?  @map("min_price") @db.Decimal(10, 2)
+  maxPrice    Decimal?  @map("max_price") @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region Region? @relation(fields: [regionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([regionId])
+  @@map("search_history")
+}
+
+model Promotion {
+  id            BigInt       @id @default(autoincrement())
+  cabinId       BigInt       @map("cabin_id")
+  title         String       @db.VarChar(255)
+  code          String?      @unique @db.VarChar(40)
+  description   String?      @db.Text
+  discountType  DiscountType @map("discount_type")
+  discountValue Decimal      @map("discount_value") @db.Decimal(10, 2)
+  startDate     DateTime     @map("start_date") @db.Date
+  endDate       DateTime     @map("end_date") @db.Date
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  cabin Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+
+  @@index([cabinId, isActive, startDate, endDate])
+  @@map("promotions")
+}
+
+model Payment {
+  id            BigInt        @id @default(autoincrement())
+  bookingId     BigInt        @map("booking_id")
+  userId        BigInt        @map("user_id")
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("KGS") @db.VarChar(10)
+  paymentMethod String        @map("payment_method") @db.VarChar(50)
+  status        PaymentStatus @default(PENDING)
+  transactionId String?       @unique @map("transaction_id") @db.VarChar(255)
+  providerPaymentId String?   @unique @map("provider_payment_id") @db.VarChar(36)
+  paymentUrl    String?       @map("payment_url") @db.Text
+  paidAt        DateTime?     @map("paid_at") @db.Timestamptz(3)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  // Payments belong to the same user as their booking; retries are separate rows.
+  booking Booking @relation(fields: [bookingId, userId], references: [id, userId], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([bookingId, status])
+  @@index([userId, createdAt])
+  @@map("payments")
+}
+
+model CabinView {
+  id       BigInt   @id @default(autoincrement())
+  cabinId  BigInt   @map("cabin_id")
+  userId   BigInt?  @map("user_id")
+  viewedAt DateTime @default(now()) @map("viewed_at") @db.Timestamptz(3)
+
+  cabin Cabin @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([cabinId, viewedAt])
+  @@index([userId, viewedAt])
+  @@map("cabin_views")
+}
+
+model OwnerPayout {
+  id               BigInt       @id @default(autoincrement())
+  ownerId          BigInt       @map("owner_id")
+  bookingId        BigInt       @map("booking_id")
+  grossAmount      Decimal      @map("gross_amount") @db.Decimal(10, 2)
+  commissionAmount Decimal      @map("commission_amount") @db.Decimal(10, 2)
+  netAmount        Decimal      @map("net_amount") @db.Decimal(10, 2)
+  // SQL permits a retry after CANCELLED, but only one PENDING/PAID payout.
+  status           PayoutStatus @default(PENDING)
+  paidAt           DateTime?    @map("paid_at") @db.Timestamptz(3)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  owner   OwnerProfile @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  booking Booking      @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  @@index([ownerId, status, createdAt])
+  @@index([bookingId])
+  @@map("owner_payouts")
+}
+
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  userId     BigInt?  @map("user_id")
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(100)
+  // Polymorphic reference: entityId has no FK to a single table.
+  entityId   BigInt   @map("entity_id")
+  oldData    Json?    @map("old_data") @db.JsonB
+  newData    Json?    @map("new_data") @db.JsonB
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@map("audit_logs")
+}
+
+model Session {
+  id              String    @id @db.VarChar(64)
+  userId          BigInt    @map("user_id")
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  adminVerifiedAt DateTime? @map("admin_verified_at") @db.Timestamptz(3)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model AdminLoginChallenge {
+  id                String    @id @db.VarChar(64)
+  userId            BigInt    @unique @map("user_id")
+  codeHash          String    @map("code_hash") @db.VarChar(64)
+  credentialVersion String    @map("credential_version") @db.VarChar(64)
+  attempts          Int       @default(0)
+  expiresAt         DateTime  @map("expires_at") @db.Timestamptz(3)
+  deliveredAt       DateTime? @map("delivered_at") @db.Timestamptz(3)
+  redirectTo        String    @map("redirect_to") @db.VarChar(1000)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("admin_login_challenges")
+}
+
+model AuthThrottle {
+  key       String   @id @db.VarChar(64)
+  attempts  Int      @default(1)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@map("auth_throttles")
+}
+
+model SiteSetting {
+  key       String   @id @db.VarChar(100)
+  value     Json     @db.JsonB
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("site_settings")
+}
+
+model Translation {
+  id        BigInt   @id @default(autoincrement())
+  locale    String   @db.VarChar(2)
+  namespace String   @db.VarChar(100)
+  key       String   @db.VarChar(255)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([locale, namespace, key])
+  @@map("translations")
+}

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/booking.json"],"sourcesContent":["{\"title\":\"Эс алууңузду пландайлы\",\"eyebrow\":\"БРОНДОО\",\"description\":\"Күндөрдү текшерип, байланыш маалыматын калтырыңыз. Үй ээси суроо-талапты ырастайт.\"}"],"names":[],"mappings":""}}]
+}

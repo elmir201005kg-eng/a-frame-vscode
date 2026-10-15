@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/owner-cabin.json"],"sourcesContent":["{\"title\":\"Your cabin details\",\"eyebrow\":\"YOUR PROPERTY\",\"description\":\"Accurate information and good photographs help guests choose.\"}"],"names":[],"mappings":""}}]
+}

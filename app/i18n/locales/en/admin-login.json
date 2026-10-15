@@ -1,0 +1,39 @@
+{
+  "title": "Administrator sign in",
+  "eyebrow": "A-FRAME KG · ADMIN",
+  "description": "Enter your email and password, then confirm your sign in with a code from Telegram.",
+  "submit": "Continue",
+  "submitting": "Sending code…",
+  "accessHint": "Access is available to administrator accounts only.",
+  "credentialsStep": "01 / 02 · Account",
+  "codeStep": "02 / 02 · Confirmation",
+  "code": {
+    "title": "Confirm your sign in",
+    "eyebrow": "A-FRAME KG · ADMIN",
+    "description": "A one-time code was sent to Telegram. Enter the 6 digits to complete your sign in."
+  },
+  "codeLabel": "Telegram code",
+  "codePlaceholder": "000000",
+  "codeHint": "The code is valid for 5 minutes. You have up to 5 attempts.",
+  "telegramMessage": "A-FRAME KG: your administrator sign in code is {code}. It is valid for 5 minutes. Do not share it with anyone.",
+  "verify": "Confirm sign in",
+  "verifying": "Checking code…",
+  "cancel": "Start again",
+  "cancelling": "Going back…",
+  "success": {
+    "title": "Sign in confirmed",
+    "eyebrow": "A-FRAME KG · ADMIN",
+    "description": "Telegram verification is complete. You are signed in as an administrator."
+  },
+  "sessionLabel": "Current account",
+  "backSite": "Back to the website",
+  "photoTitle": "Care for every journey.",
+  "photoCaption": "The spirit of Kyrgyzstan",
+  "skipContent": "Skip to the sign in form",
+  "languageLabel": "Interface language",
+  "languages": {
+    "kg": "Кыргызча",
+    "ru": "Русский",
+    "en": "English"
+  }
+}

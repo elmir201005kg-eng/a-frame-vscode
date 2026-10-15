@@ -1,0 +1,22 @@
+export const adminSections = [
+  "dashboard",
+  "analytics",
+  "categories",
+  "calendar",
+  "promotions",
+  "messages",
+  "audit",
+  "cabins",
+  "regions",
+  "amenities",
+  "users",
+  "owners",
+  "bookings",
+  "payments",
+  "reviews",
+  "activities",
+  "notifications",
+  "translations",
+  "settings",
+] as const;
+export type AdminSection = (typeof adminSections)[number];

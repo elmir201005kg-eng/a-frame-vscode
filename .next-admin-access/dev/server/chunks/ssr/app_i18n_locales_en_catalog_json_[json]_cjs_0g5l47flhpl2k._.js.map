@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/catalog.json"],"sourcesContent":["{\"title\":\"Find your place\",\"eyebrow\":\"CABINS IN KYRGYZSTAN\",\"description\":\"Choose a destination, dates and comforts for your escape.\"}"],"names":[],"mappings":""}}]
+}

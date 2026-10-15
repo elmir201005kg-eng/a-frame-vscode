@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/not-found.json"],"sourcesContent":["{\"metadata\":{\"title\":\"Барак табылган жок — A-FRAME KG\",\"description\":\"Бул даректе барак жок. Башкы баракка кайтып, эс алуу үчүн үйчө тандаңыз.\"},\"brandHome\":\"A-FRAME KG — башкы баракка\",\"language\":{\"label\":\"Сайттын тили\",\"kg\":\"Кыргызча\",\"ru\":\"Русский\",\"en\":\"English\"},\"code\":\"404\",\"eyebrow\":\"ТААНЫШ ЖОЛГО КАЙТАЛЫ\",\"title\":\"Бул барак табылган жок\",\"description\":\"Дарек өзгөргөн же туура эмес жазылган болушу мүмкүн. Башкы барактан жайлуу үйчөлөрдү жана жаңы багыттарды таба аласыз.\",\"homeAction\":\"Башкы баракка кайтуу\"}"],"names":[],"mappings":""}}]
+}

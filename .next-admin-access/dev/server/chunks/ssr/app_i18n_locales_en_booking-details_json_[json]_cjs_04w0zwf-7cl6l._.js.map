@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/booking-details.json"],"sourcesContent":["{\"title\":\"Booking details\",\"eyebrow\":\"YOUR TRIP\",\"description\":\"The current status, dates and cost of your stay.\"}"],"names":[],"mappings":""}}]
+}

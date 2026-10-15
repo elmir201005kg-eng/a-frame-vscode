@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/ASUS/OneDrive/Desktop/a-frame-vscode/app/[locale]/(platform)/loading.tsx"],"sourcesContent":["import { LoadingSkeleton } from \"@/components/loading-skeleton\";\nexport default function Loading() { return <LoadingSkeleton />; }\n"],"names":["Loading"],"mappings":";;;;;AAAA;;;AACe,SAASA;IAAY,qBAAO,8OAAC,qJAAe;;;;;AAAK"}}]
+}

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/owner-cabin.json"],"sourcesContent":["{\"title\":\"Үйүңүздүн маалыматы\",\"eyebrow\":\"СИЗДИН ҮЙҮҢҮЗ\",\"description\":\"Так маалымат жана жакшы сүрөттөр конокторго тандоо жасоого жардам берет.\"}"],"names":[],"mappings":""}}]
+}

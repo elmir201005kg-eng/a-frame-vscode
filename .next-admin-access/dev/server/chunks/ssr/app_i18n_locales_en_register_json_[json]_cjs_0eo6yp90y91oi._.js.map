@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/register.json"],"sourcesContent":["{\"title\":\"Let’s get acquainted\",\"eyebrow\":\"CREATE YOUR ACCOUNT\",\"description\":\"Save cabins, book stays and manage your trips.\"}"],"names":[],"mappings":""}}]
+}

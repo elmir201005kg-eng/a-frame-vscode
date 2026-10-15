@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/not-found.json"],"sourcesContent":["{\"metadata\":{\"title\":\"Page not found — A-FRAME KG\",\"description\":\"There is no page at this address. Return to the home page and find a cabin for your next getaway.\"},\"brandHome\":\"A-FRAME KG — home\",\"language\":{\"label\":\"Site language\",\"kg\":\"Кыргызча\",\"ru\":\"Русский\",\"en\":\"English\"},\"code\":\"404\",\"eyebrow\":\"BACK TO A FAMILIAR PATH\",\"title\":\"We couldn’t find this page\",\"description\":\"The address may have changed or contain a typo. Discover cozy cabins and new destinations on the home page.\",\"homeAction\":\"Return to the home page\"}"],"names":[],"mappings":""}}]
+}

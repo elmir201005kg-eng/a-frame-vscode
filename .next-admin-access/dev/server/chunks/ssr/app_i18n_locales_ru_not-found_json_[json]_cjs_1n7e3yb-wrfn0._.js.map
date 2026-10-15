@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/not-found.json"],"sourcesContent":["{\"metadata\":{\"title\":\"Страница не найдена — A-FRAME KG\",\"description\":\"По этому адресу нет страницы. Вернитесь на главную и найдите домик для отдыха.\"},\"brandHome\":\"A-FRAME KG — на главную\",\"language\":{\"label\":\"Язык сайта\",\"kg\":\"Кыргызча\",\"ru\":\"Русский\",\"en\":\"English\"},\"code\":\"404\",\"eyebrow\":\"ВЕРНЁМСЯ НА ЗНАКОМУЮ ТРОПУ\",\"title\":\"Эта страница не найдена\",\"description\":\"Возможно, адрес изменился или в нём есть опечатка. На главной вас ждут уютные домики и новые направления.\",\"homeAction\":\"Вернуться на главную\"}"],"names":[],"mappings":""}}]
+}

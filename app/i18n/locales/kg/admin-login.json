@@ -1,0 +1,39 @@
+{
+  "title": "Администратордун кирүүсү",
+  "eyebrow": "A-FRAME KG · ADMIN",
+  "description": "Email менен сырсөздү киргизиңиз. Андан соң Telegram кодун колдонуп кирүүнү ырастаңыз.",
+  "submit": "Улантуу",
+  "submitting": "Код жөнөтүлүүдө…",
+  "accessHint": "Администраторлордун аккаунттары үчүн гана.",
+  "credentialsStep": "01 / 02 · Аккаунт",
+  "codeStep": "02 / 02 · Ырастоо",
+  "code": {
+    "title": "Кирүүнү ырастаңыз",
+    "eyebrow": "A-FRAME KG · ADMIN",
+    "description": "Бир жолку код Telegram аркылуу жөнөтүлдү. Кирүү үчүн 6 цифраны киргизиңиз."
+  },
+  "codeLabel": "Telegram коду",
+  "codePlaceholder": "000000",
+  "codeHint": "Код 5 мүнөт жарактуу. Текшерүүгө 5 аракетке чейин берилет.",
+  "telegramMessage": "A-FRAME KG: администратордун кирүү коду — {code}. Код 5 мүнөт жарактуу. Аны эч кимге бербеңиз.",
+  "verify": "Кирүүнү ырастоо",
+  "verifying": "Код текшерилүүдө…",
+  "cancel": "Кайра баштоо",
+  "cancelling": "Артка кайтууда…",
+  "success": {
+    "title": "Кирүү ырасталды",
+    "eyebrow": "A-FRAME KG · ADMIN",
+    "description": "Telegram аркылуу текшерүү аяктады. Сиз администратор катары кирдиңиз."
+  },
+  "sessionLabel": "Учурдагы аккаунт",
+  "backSite": "Сайтка кайтуу",
+  "photoTitle": "Ар бир саякатка кам көрөбүз.",
+  "photoCaption": "Кыргызстандын маанайы",
+  "skipContent": "Кирүү формасына өтүү",
+  "languageLabel": "Интерфейстин тили",
+  "languages": {
+    "kg": "Кыргызча",
+    "ru": "Русский",
+    "en": "English"
+  }
+}
