@@ -10,6 +10,8 @@ export async function GET(request: Request) {
       params.get("checkIn") || "",
       params.get("checkOut") || "",
       Number(params.get("guests")),
+      undefined,
+      params.get("promoCode") || "",
     );
     return NextResponse.json(
       {

@@ -16,7 +16,7 @@ import type { Prisma } from "@/generated/prisma/client";
 export async function AdminCabins({ ctx }: { ctx: AdminContext }) {
   const { locale, common, text: { manage: t }, query } = ctx, edit = queryString(query, "edit"), q = queryString(query, "q"), status = queryString(query, "status");
   if (edit) {
-    const cabin = /^[1-9]\d{0,17}$/.test(edit) ? await db.cabin.findUnique({ where: { id: BigInt(edit) }, include: { ...cabinInclude, categories: true } }) : null;
+    const cabin = /^[1-9]\d{0,17}$/.test(edit) ? await db.cabin.findUnique({ where: { id: BigInt(edit) }, include: { ...cabinInclude, categories: { include: { category: true } } } }) : null;
     const [owners, regions, amenities, categories] = await Promise.all([
       db.ownerProfile.findMany({ where: { user: { isActive: true, role: "OWNER" } }, orderBy: { id: "asc" }, select: { id: true, businessName: true, user: { select: { firstName: true } } } }),
       db.region.findMany({ where: { isActive: true } }), db.amenity.findMany({ where: { isActive: true } }), db.category.findMany({ where: { isActive: true } }),

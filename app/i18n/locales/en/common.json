@@ -322,7 +322,10 @@
     "promotionSaved": "Offer saved",
     "promotionDeleted": "Offer deleted",
     "cabinDeleted": "Cabin deleted",
-    "securitySessionsRevoked": "Sessions revoked"
+    "securitySessionsRevoked": "Sessions revoked",
+    "userRegistered": "User registered",
+    "reviewCreated": "New review",
+    "paymentExported": "Payments exported"
   },
   "calendar": {
     "months": [

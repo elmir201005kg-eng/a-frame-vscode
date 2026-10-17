@@ -175,6 +175,8 @@ function databaseDouble(options: { status?: string; demo?: boolean; paymentStatu
     paymentUrl: options.url || null, createdAt: new Date(Date.now() - 60000), status: options.paymentStatus || "PENDING", transactionId: null as string | null, paidAt: null as Date | null }];
   const notifications: unknown[] = [], audits: unknown[] = [];
   const tx = {
+    siteSetting: { findUnique: async () => null },
+    user: { findMany: async () => [] },
     $queryRaw: async () => [],
     booking: {
       findFirst: async ({ where }: { where: { id: bigint; userId: bigint } }) => where.id === booking.id && where.userId === booking.userId ? booking : null,

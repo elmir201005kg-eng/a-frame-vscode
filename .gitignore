@@ -16,8 +16,12 @@
 /test-results/
 /pwa-test-results/
 /test-results-forms/
+/test-results-admin/
+/.next-admin-production/
+/.next-admin-dev/
 /.next-forms-qa-production/
 /.next-forms-qa-dev/
+/.next-hydration-qa/
 /playwright-report/
 
 # next.js

@@ -7,6 +7,7 @@ import { createSession, destroySession, requireUser, throttle } from "@/lib/auth
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { beginAdminLogin } from "@/lib/admin-two-factor";
 import { TelegramError } from "@/lib/telegram";
+import { notifyAdministrators } from "@/lib/admin-events";
 import {
   email,
   phone,
@@ -43,16 +44,22 @@ export async function registerAction(_: ActionState, form: FormData): Promise<Ac
     await throttle("auth-global", 100);
     if (await db.user.findUnique({ where: { email: address }, select: { id: true } }))
       fail("emailExists");
-    const user = await db.user.create({
+    const passwordHash = await hashPassword(secret);
+    const user = await db.$transaction(async tx => {
+    const created = await tx.user.create({
       data: {
         email: address,
         firstName,
         phone: contact,
-        passwordHash: await hashPassword(secret),
+        passwordHash,
         role,
         preferredLocale: locale,
         ...(role === "OWNER" ? { ownerProfile: { create: {} } } : {}),
       },
+    });
+    await tx.auditLog.create({ data: { userId: created.id, action: "user.registered", entityType: "user", entityId: created.id, newData: { role } } });
+    await notifyAdministrators(tx, "user.registered", firstName);
+    return created;
     });
     await createSession(user.id);
     next = form.get("next")

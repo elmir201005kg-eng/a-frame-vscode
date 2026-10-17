@@ -44,7 +44,11 @@
     ".next-forms-qa-production/types/**/*.ts",
     ".next-forms-qa-production/dev/types/**/*.ts",
     ".next-admin-access/types/**/*.ts",
-    ".next-admin-access/dev/types/**/*.ts"
+    ".next-admin-access/dev/types/**/*.ts",
+    ".next-admin-production/types/**/*.ts",
+    ".next-admin-production/dev/types/**/*.ts",
+    ".next/ai-qa/types/**/*.ts",
+    ".next/ai-qa/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

@@ -7,7 +7,7 @@ import { addDays, bishkekToday, isDateOnly } from "@/lib/stay-dates";
 import { calendarAdminAction } from "@/app/actions/admin-workspace";
 import { AdminActionForm } from "@/components/admin-action-form";
 import { Field, SelectField, TextAreaField } from "@/components/product-ui";
-import { AdminPageHeading, AdminPagination, hidden, localizedTitle, type AdminContext } from "@/components/admin-workspace-ui";
+import { AdminPageHeading, AdminPagination, localizedTitle, type AdminContext } from "@/components/admin-workspace-ui";
 import { NavigationForm } from "@/components/navigation-form";
 import type { Prisma } from "@/generated/prisma/client";
 

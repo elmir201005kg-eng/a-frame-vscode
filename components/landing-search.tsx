@@ -20,8 +20,8 @@ export function LandingSearch({ locale, search, regions, disabled }: {
       <PremiumSelect id={regionId} name="region" defaultValue="" disabled={disabled}
         options={[{ value: "", label: search.destinationPlaceholder }, ...regions.map(region => ({ value: region.slug, label: region.name }))]} />
     </div>
-    <PremiumDatePicker disabled={disabled} className="search-date-fields" labels={{ checkIn: search.checkIn, checkOut: search.checkOut }} />
-    <GuestSelector disabled={disabled} label={search.guests} placeholder={search.guestsPlaceholder} maxGuests={50} />
+    <PremiumDatePicker locale={locale} disabled={disabled} className="search-date-fields" labels={{ checkIn: search.checkIn, checkOut: search.checkOut }} />
+    <GuestSelector locale={locale} disabled={disabled} label={search.guests} placeholder={search.guestsPlaceholder} maxGuests={50} />
     <SubmitButton className="button button-primary search-submit" disabled={disabled}><Icon name="search" size={19} />{search.submit}</SubmitButton>
   </NavigationForm>;
 }

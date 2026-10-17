@@ -5,6 +5,7 @@ import { chooseOption, chooseDay } from "./form-controls";
 import { adminPeriod } from "../lib/admin-period";
 
 test.skip(!process.env.QA_SCHEMA, "Run npm run test:performance to use a newly created, isolated test schema.");
+test.use({ screenshot: "only-on-failure" });
 const connection = new URL(process.env.E2E_DATABASE_URL!);
 const schema = connection.searchParams.get("schema") || "public";
 if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(schema)) throw new Error("Invalid schema");
@@ -114,14 +115,16 @@ test("admin moderation persists an audit; USER, OWNER and cross-origin action re
   await session(context, process.env.QA_ADMIN_ID!);
   await page.goto("/en/admin/cabins?q=Stage%20One%20Cabin");
   const record = page.locator(".admin-record").first();
+  await record.locator("summary").click();
   await chooseOption(page, record.getByRole("combobox"), "Published");
   const submitted = page.waitForRequest(request => request.method() === "POST" && !!request.headers()["next-action"]);
   await record.locator("button[type='submit']").click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Confirm", exact: true }).click();
   const request = await submitted;
   await expect(record.locator(".form-success")).toBeVisible();
   expect((await pool.query("SELECT status FROM cabins WHERE id=$1", [cabin])).rows[0].status).toBe("PUBLISHED");
   const audit = await pool.query("SELECT user_id,new_data FROM audit_logs WHERE entity_type='cabin' AND entity_id=$1 AND action='cabin.moderated'", [cabin]);
-  expect(audit.rows).toEqual([{ user_id: process.env.QA_ADMIN_ID, new_data: { status: "PUBLISHED" } }]);
+  expect(audit.rows).toEqual([{ user_id: process.env.QA_ADMIN_ID, new_data: { status: "PUBLISHED", actorRole: "ADMIN" } }]);
   for (const userId of [guest, process.env.QA_OWNER_ID!]) {
     const other = await browser.newContext();
     await session(other, userId);
@@ -136,6 +139,7 @@ test("admin moderation persists an audit; USER, OWNER and cross-origin action re
   // Keep the public catalog fixture count used by the existing regression suite.
   await chooseOption(page, record.getByRole("combobox"), "Archived");
   await record.locator("button[type='submit']").click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Confirm", exact: true }).click();
   await expect.poll(async () => (await pool.query("SELECT status FROM cabins WHERE id=$1", [cabin])).rows[0].status).toBe("ARCHIVED");
 });
 
@@ -143,10 +147,10 @@ test("all existing admin sections and locale switches work; mobile drawer, keybo
   test.setTimeout(300000);
   const errors = monitor(page);
   await session(context, process.env.QA_ADMIN_ID!);
-  for (const section of ["cabins", "bookings", "payments", "users", "owners", "regions", "reviews", "activities", "notifications", "translations", "settings", "amenities"]) {
+  for (const section of ["cabins", "bookings", "payments", "users", "owners", "regions", "reviews", "activities", "notifications", "translations", "settings", "amenities", "categories", "calendar", "promotions", "messages", "audit", "analytics"]) {
     await page.goto(`/ru/admin/${section}`);
     await expect(page.locator(".admin-sidebar a[aria-current='page']")).toHaveAttribute("href", `/ru/admin/${section}`);
-    await expect(page.locator(".admin-section-heading")).toBeVisible();
+    await expect(page.locator(".admin-section-heading, .admin-page-heading").first()).toBeVisible();
   }
   for (const locale of ["ru", "kg", "en"] as const) {
     await page.goto(`/${locale}/admin`);
@@ -163,10 +167,14 @@ test("all existing admin sections and locale switches work; mobile drawer, keybo
     }
   }
   await page.goto("/ru/admin?period=7");
-  await chooseOption(page, page.locator(".admin-topbar .language-switcher .premium-select-trigger"), "Кыргызча", "KG");
+  await page.locator(".admin-topbar .language-switcher .premium-select-trigger").click();
+  await page.getByRole("option", { name: "Кыргызча", exact: true }).click();
   await expect(page).toHaveURL(/\/kg\/admin\?period=7/);
-  await chooseOption(page, page.locator(".admin-topbar .language-switcher .premium-select-trigger"), "English", "EN");
+  await expect(page.locator(".admin-topbar")).toHaveCount(1);
+  await page.locator(".admin-topbar .language-switcher .premium-select-trigger").click();
+  await page.getByRole("option", { name: "English", exact: true }).click();
   await expect(page).toHaveURL(/\/en\/admin\?period=7/);
+  await expect(page.locator(".admin-topbar")).toHaveCount(1);
   await page.locator(".admin-collapse").click();
   await expect(page.locator(".admin-shell")).toHaveAttribute("data-collapsed", "true");
   await page.locator(".admin-collapse").click();

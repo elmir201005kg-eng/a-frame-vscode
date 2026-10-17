@@ -4,9 +4,12 @@ import { notFound } from "next/navigation";
 import { isLocale, locales, localeSettings } from "@/app/i18n/config";
 import { FormDesignProvider } from "@/components/form-design-provider";
 import { PwaManager } from "@/components/pwa-manager";
+import { Suspense } from "react";
+import { AiConsultant } from "@/components/ai-consultant";
 import { pwaThemeColor } from "@/lib/pwa";
 import "../globals.css";
 import "../forms.css";
+import "../ai-widget.css";
 
 export const metadata: Metadata = {
   applicationName: "A-FRAME KG",
@@ -34,7 +37,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[lo
 
   return (
     <html lang={localeSettings[locale].htmlLang} className={manrope.variable} data-scroll-behavior="smooth">
-      <body><FormDesignProvider locale={locale}>{children}</FormDesignProvider><PwaManager locale={locale} /></body>
+      <body><FormDesignProvider locale={locale}>{children}</FormDesignProvider><PwaManager locale={locale} /><Suspense fallback={null}><AiConsultant locale={locale} /></Suspense></body>
     </html>
   );
 }

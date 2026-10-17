@@ -6,6 +6,7 @@ import { isDemoBooking } from "@/lib/demo";
 import { fail } from "@/lib/validation";
 import { FINIK_PAYMENT_AMOUNT, FINIK_PAYMENT_METHOD } from "@/lib/finik-config";
 import type { FinikWebhookEvent } from "@/lib/finik";
+import { notifyAdministrators } from "@/lib/admin-events";
 
 type PaymentDatabase = Pick<typeof db, "$transaction">;
 
@@ -72,6 +73,7 @@ export async function applyFinikWebhook(event: FinikWebhookEvent, client: Paymen
         data: { amount: FINIK_PAYMENT_AMOUNT, currency: "KGS", transactionId: event.transactionId },
       })),
     });
+    await notifyAdministrators(tx, type, payment.booking.bookingNumber, payment.bookingId);
     await tx.auditLog.create({
       data: {
         userId: payment.userId, action: type, entityType: "payment", entityId: payment.id,

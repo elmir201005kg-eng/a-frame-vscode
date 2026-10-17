@@ -311,7 +311,7 @@ export function OwnerCabinEditor({
               <p className="form-hint">{labels.calendarManageHint}</p>
               <ActionForm action={calendarAction} locale={locale} common={common}>
                 <input name="cabinId" value={cabin.id.toString()} type="hidden" />
-                <PremiumDatePicker startName="start" endName="end" required labels={{ checkIn: labels.checkIn, checkOut: labels.checkOut }} />
+                <PremiumDatePicker locale={locale} startName="start" endName="end" required labels={{ checkIn: labels.checkIn, checkOut: labels.checkOut }} />
                 <SelectField label={labels.status} name="mode">
                   <option value="BLOCKED">{labels.blockDates}</option>
                   <option value="AVAILABLE">{labels.openDates}</option>

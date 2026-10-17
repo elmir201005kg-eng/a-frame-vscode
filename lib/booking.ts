@@ -5,6 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { fail, stay } from "@/lib/validation";
 import { demoModeEnabled } from "@/lib/demo";
 import { FINIK_PAYMENT_AMOUNT, FINIK_PAYMENT_METHOD } from "@/lib/finik-config";
+import { notifyAdministrators } from "@/lib/admin-events";
 
 type Transaction = Prisma.TransactionClient;
 export async function blockedNights(cabinId: bigint, start: string, end: Date) {
@@ -34,6 +35,7 @@ export async function quoteStay(
   checkOut: string,
   guests: number,
   tx: Transaction = db,
+  promoCode = "",
 ) {
   const range = stay(checkIn, checkOut, guests);
   const cabin = await tx.cabin.findUnique({
@@ -80,9 +82,21 @@ export async function quoteStay(
       ).toFixed(2),
     };
   });
-  const total = prices.reduce((sum, day) => sum.plus(day.price), new Prisma.Decimal(0));
-  if (total.gt("99999999.99")) fail("invalidPrice");
-  return { cabin, range, prices, total };
+  const subtotal = prices.reduce((sum, day) => sum.plus(day.price), new Prisma.Decimal(0));
+  if (subtotal.gt("99999999.99")) fail("invalidPrice");
+  const code = promoCode.trim().toUpperCase();
+  if (code && !/^[A-Z0-9][A-Z0-9_-]{2,39}$/.test(code)) fail("invalidPromoCode");
+  const promotions = await tx.promotion.findMany({ where: { cabinId, isActive: true,
+    startDate: { lte: range.start }, endDate: { gte: new Date(range.end.getTime() - 86400000) },
+    OR: [{ code: null }, ...(code ? [{ code }] : [])],
+  }, orderBy: { id: "asc" } });
+  if (code && !promotions.some(row => row.code === code)) fail("invalidPromoCode");
+  let discount = new Prisma.Decimal(0), promotionId: string | null = null;
+  for (const offer of promotions) {
+    const candidate = Prisma.Decimal.min(subtotal, offer.discountType === "PERCENT" ? subtotal.mul(offer.discountValue).div(100).toDecimalPlaces(2) : offer.discountValue);
+    if (candidate.gt(discount)) { discount = candidate; promotionId = offer.id.toString(); }
+  }
+  return { cabin, range, prices, subtotal, discount, promotionId, total: subtotal.minus(discount) };
 }
 export async function createBooking(input: {
   userId: bigint;
@@ -94,6 +108,7 @@ export async function createBooking(input: {
   guestPhone: string;
   guestEmail: string;
   requestKey: string;
+  promoCode?: string;
 }) {
   return db.$transaction(
     async (tx) => {
@@ -117,7 +132,7 @@ export async function createBooking(input: {
           fail("invalidFields");
         return duplicate;
       }
-      const quote = await quoteStay(input.cabinId, input.checkIn, input.checkOut, input.guests, tx);
+      const quote = await quoteStay(input.cabinId, input.checkIn, input.checkOut, input.guests, tx, input.promoCode);
       const demo = quote.cabin.isDemo;
       const cancelUntil = new Date(`${input.checkIn}T${quote.cabin.checkInTime}:00+06:00`);
       cancelUntil.setTime(cancelUntil.getTime() - quote.cabin.cancellationHours * 3600000);
@@ -135,7 +150,8 @@ export async function createBooking(input: {
           guestEmail: input.guestEmail,
           pricePerNight: quote.cabin.pricePerNight,
           nights: quote.range.nights,
-          subtotal: quote.total,
+          subtotal: quote.subtotal,
+          discountAmount: quote.discount,
           totalAmount: quote.total,
           pricingDetails: quote.prices,
           cancelUntil,
@@ -172,13 +188,14 @@ export async function createBooking(input: {
           },
         ],
       });
+      await notifyAdministrators(tx, "booking.created", booking.bookingNumber, booking.id);
       await tx.auditLog.create({
         data: {
           userId: input.userId,
           action: "booking.created",
           entityType: "booking",
           entityId: booking.id,
-          newData: { status: "PENDING", number: booking.bookingNumber, demo },
+          newData: { status: "PENDING", number: booking.bookingNumber, demo, promotionId: quote.promotionId, discountAmount: quote.discount.toString() },
         },
       });
       return booking;

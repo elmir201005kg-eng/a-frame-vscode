@@ -33,7 +33,7 @@ async function audit(
   data?: Prisma.InputJsonObject,
 ) {
   await tx.auditLog.create({
-    data: { userId: user.id, action, entityType, entityId, ...(data ? { newData: data } : {}) },
+    data: { userId: user.id, action, entityType, entityId, newData: { ...data, actorRole: user.role } },
   });
 }
 
@@ -81,6 +81,8 @@ export async function userAdminAction(_: ActionState, form: FormData): Promise<A
     if (form.get("confirm") !== "yes") fail("confirmationRequired");
     await db.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext('a-frame-admin-users'))::text AS lock`;
+      const actor = await tx.user.findUnique({ where: { id: user.id }, select: { role: true, isActive: true } });
+      if (!actor?.isActive || !isAdminRole(actor.role) || actor.role !== user.role) fail("forbidden");
       const current = await tx.user.findUnique({
         where: { id: userId },
         include: { ownerProfile: true },
@@ -120,7 +122,7 @@ export async function userAdminAction(_: ActionState, form: FormData): Promise<A
         await tx.adminLoginChallenge.deleteMany({ where: { userId } });
       }
       await tx.auditLog.create({ data: { userId: user.id, action: "user.updated", entityType: "user", entityId: userId,
-        oldData: { role: current.role, isActive: current.isActive }, newData: { role, isActive } } });
+        oldData: { role: current.role, isActive: current.isActive }, newData: { role, isActive, actorRole: user.role } } });
     });
     revalidatePath(`/${locale}`, "layout");
     return { success: true };
@@ -238,6 +240,8 @@ export async function bookingAdminAction(_: ActionState, form: FormData): Promis
       )
         fail("invalidStatus");
       if (isDemoBooking(booking) && status !== "REJECTED") fail("demoConfirmationForbidden");
+      if (status === "CONFIRMED" && await tx.cabinAvailability.count({ where: { cabinId: booking.cabinId,
+        date: { gte: booking.checkIn, lt: booking.checkOut }, status: { not: "AVAILABLE" } } })) fail("datesUnavailable");
       if (status === "REJECTED" && booking.payments.some((row) => row.status === "PAID"))
         fail("refundRequired");
       await tx.booking.update({ where: { id: bookingId }, data: { status } });
@@ -258,7 +262,7 @@ export async function bookingAdminAction(_: ActionState, form: FormData): Promis
       });
       await audit(tx, user, type, "booking", bookingId, { status });
     });
-    revalidatePath(`/${locale}`, "layout");
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
     return errorState(error);

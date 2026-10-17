@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { publicCabinWhere } from "@/lib/catalog";
 import { requireUser } from "@/lib/auth";
 import { cancelBooking, createBooking } from "@/lib/booking";
+import { notifyAdministrators } from "@/lib/admin-events";
 import type { ActionState } from "./auth";
 import {
   InputError,
@@ -64,6 +65,7 @@ export async function bookingAction(_: ActionState, form: FormData): Promise<Act
       guestPhone: phone(text(form, "guestPhone", 7, 30)),
       guestEmail: email(text(form, "guestEmail", 1, 255)),
       requestKey,
+      promoCode: typeof form.get("promoCode") === "string" ? text(form, "promoCode", 0, 40) : "",
     });
     bookingId = booking.id.toString();
   } catch (error) {
@@ -107,7 +109,8 @@ export async function reviewAction(_: ActionState, form: FormData): Promise<Acti
       include: { review: true },
     });
     if (!booking || booking.review) fail("reviewUnavailable");
-    await db.review.create({
+    await db.$transaction(async tx => {
+    const review = await tx.review.create({
       data: {
         userId: user.id,
         cabinId: booking.cabinId,
@@ -116,6 +119,9 @@ export async function reviewAction(_: ActionState, form: FormData): Promise<Acti
         text: text(form, "review", 10, 5000),
         status: "PENDING",
       },
+    });
+    await notifyAdministrators(tx, "review.created", booking.bookingNumber, bookingId);
+    await tx.auditLog.create({ data: { userId: user.id, action: "review.created", entityType: "review", entityId: review.id } });
     });
     revalidatePath(`/${locale}`, "layout");
     return { success: true };

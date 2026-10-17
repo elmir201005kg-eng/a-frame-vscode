@@ -322,7 +322,10 @@
     "promotionSaved": "Акция сакталды",
     "promotionDeleted": "Акция өчүрүлдү",
     "cabinDeleted": "Үй өчүрүлдү",
-    "securitySessionsRevoked": "Сессиялар бүтүрүлдү"
+    "securitySessionsRevoked": "Сессиялар бүтүрүлдү",
+    "userRegistered": "Колдонуучу катталды",
+    "reviewCreated": "Жаңы пикир",
+    "paymentExported": "Төлөмдөр экспорттолду"
   },
   "calendar": {
     "months": [

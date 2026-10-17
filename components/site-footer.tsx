@@ -3,7 +3,7 @@ import { Brand } from "@/components/brand";
 import { Icon } from "@/components/icon";
 import type { LandingDictionary } from "@/app/i18n/dictionaries";
 import type { Locale } from "@/app/i18n/config";
-import { publicSupportEmail } from "@/lib/public-settings";
+import { publicSupportEmail, publicContactSettings } from "@/lib/public-settings";
 import { isDatabaseUnavailable } from "@/lib/db-errors";
 import { siteContact } from "@/lib/site-contact";
 
@@ -29,7 +29,9 @@ export async function SiteFooter({
     return null;
   })) || siteContact.email;
   const emailHref = `mailto:${encodeURIComponent(supportEmail)}`;
-  const displayPhone = siteContact.phone.replace(/^(\+\d{3})(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3 $4");
+  const contacts = offline ? null : await publicContactSettings().catch((error: unknown) => { if (!isDatabaseUnavailable(error)) throw error; return null; });
+  const phone = contacts?.phone || siteContact.phone;
+  const displayPhone = phone.replace(/^(\+\d{3})(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3 $4");
 
   return (
     <footer className="site-footer">
@@ -66,11 +68,11 @@ export async function SiteFooter({
           <a href={emailHref}>
             <Icon name="mail" size={16} /><span>{supportEmail}</span>
           </a>
-          <a href={`tel:${siteContact.phone}`}>
+          <a href={`tel:${phone.replace(/[^\d+]/g, "")}`}>
             <Icon name="phone" size={16} /><span>{displayPhone}</span>
           </a>
           <p className="footer-address">
-            <Icon name="pin" size={16} /><span>{footer.address}</span>
+            <Icon name="pin" size={16} /><span>{contacts?.address || footer.address}</span>
           </p>
         </div>
         <div className="footer-socials">

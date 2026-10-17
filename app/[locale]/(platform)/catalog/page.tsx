@@ -108,8 +108,8 @@ export default async function CatalogPage({
                 defaultValue={single(query, "maxPrice")}
               />
             </div>
-            <GuestSelector label={common.labels.guests} defaultValue={single(query, "guests")} maxGuests={50} />
-            <PremiumDatePicker today={today()} labels={{ checkIn: common.labels.checkIn, checkOut: common.labels.checkOut }}
+            <GuestSelector locale={locale} label={common.labels.guests} defaultValue={single(query, "guests")} maxGuests={50} />
+            <PremiumDatePicker locale={locale} today={today()} labels={{ checkIn: common.labels.checkIn, checkOut: common.labels.checkOut }}
               defaultValue={{ checkIn: single(query, "checkIn"), checkOut: single(query, "checkOut") }} />
             <FilterDropdown label={common.nav.amenities} defaultValue={selected.filter(Boolean)}
               options={refs.amenities.map(amenity => ({ value: amenity.slug, label: amenity.name }))} />

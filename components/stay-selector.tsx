@@ -59,10 +59,10 @@ export function StaySelector({
       </p>
       <NavigationForm action={`/${locale}/booking`} className="product-form">
         <input name="cabin" value={slug} type="hidden" />
-        <PremiumDatePicker value={values} required today={today} blocked={blocked} maxDate={addDays(today, 365)}
+        <PremiumDatePicker locale={locale} value={values} required today={today} blocked={blocked} maxDate={addDays(today, 365)}
           labels={{ checkIn: labels.checkIn, checkOut: labels.checkOut }}
           onValueChange={(range) => { reset(); setValues(previous => ({ ...previous, ...range })); }} />
-        <GuestSelector label={labels.guests} required value={values.guests} maxGuests={maxGuests} onValueChange={value => update("guests", value)} />
+        <GuestSelector locale={locale} label={labels.guests} required value={values.guests} maxGuests={maxGuests} onValueChange={value => update("guests", value)} />
         <PendingButton className="button button-outline" type="button" pending={checking} onClick={() => check({ cabinId, ...values })}>
           {checking ? labels.checking : labels.confirmAvailability}
         </PendingButton>
@@ -88,6 +88,7 @@ export function StaySelector({
       <details className="stay-calendar" onToggle={(event) => setCalendarOpen(event.currentTarget.open)}>
         <summary>{labels.availability}</summary>
         {calendarOpen && <AvailabilityCalendar
+          locale={locale}
           today={today}
           months={months}
           weekdays={weekdays}

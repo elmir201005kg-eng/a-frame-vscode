@@ -9,6 +9,8 @@ async function main() {
   const password = process.env.ADMIN_PASSWORD || "",
     phone = process.env.ADMIN_PHONE || "",
     firstName = process.env.ADMIN_NAME || "Administrator";
+  const role = process.env.ADMIN_ROLE || "ADMIN";
+  if (role !== "ADMIN" && role !== "SUPER_ADMIN") throw new SetupError("ADMIN_ROLE must be ADMIN or SUPER_ADMIN.");
   if (
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address) ||
     password.length < 10 ||
@@ -38,7 +40,7 @@ async function main() {
         phone,
         firstName,
         passwordHash: await hashPassword(password),
-        role: "ADMIN",
+        role,
         isVerified: true,
       },
     });

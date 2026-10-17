@@ -19,6 +19,7 @@ export function AdminFilters({ ctx, section, statuses = [], dates = false, child
   const { text: { manage: t }, common, query, locale } = ctx;
   return <>
     <NavigationForm action={`/${locale}/admin/${section}`} className="admin-filters">
+      {section === "bookings" && /^[1-9]\d{0,17}$/.test(queryString(query, "userId")) && hidden("userId", queryString(query, "userId"))}
       <div className="admin-filter-search"><Search size={17} /><Field label={t.search} name="q" type="search" maxLength={150} defaultValue={queryString(query, "q")} /></div>
       {statuses.length > 0 && <SelectField label={common.labels.status} name="status" defaultValue={queryString(query, "status")}><option value="">{t.all}</option>{statuses.map(value => <option key={value} value={value}>{(section === "payments" ? common.paymentStatuses[value as keyof typeof common.paymentStatuses] : common.statuses[value as keyof typeof common.statuses]) || value}</option>)}</SelectField>}
       {dates && <><Field label={t.periodFrom} type="date" name="from" defaultValue={queryString(query, "from")} /><Field label={t.periodTo} type="date" name="to" defaultValue={queryString(query, "to")} /></>}

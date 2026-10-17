@@ -5,16 +5,18 @@ import { Icon } from "@/components/icon";
 import type { CommonDictionary } from "@/app/i18n/platform";
 import { useFormDesign } from "@/components/form-design-provider";
 import { addDays, isDateOnly, validStay } from "@/lib/stay-dates";
+import type { Locale } from "@/app/i18n/config";
 
 export function AvailabilityCalendar({
-  today, months, weekdays, blocked = [], common, onDay, checkIn = "", checkOut = "",
+  locale, today, months, weekdays, blocked = [], common, onDay, checkIn = "", checkOut = "",
   selectionMode, minDate = today, maxDate,
 }: {
+  locale: Locale;
   today: string; months: string[]; weekdays: string[]; blocked?: string[];
   common: CommonDictionary; onDay?: (day: string) => void; checkIn?: string; checkOut?: string;
   selectionMode?: "start" | "end" | "single"; minDate?: string; maxDate?: string;
 }) {
-  const { text } = useFormDesign();
+  const { text } = useFormDesign(locale);
   const mode = selectionMode ?? (checkIn && !checkOut ? "end" : "start");
   const candidate = mode === "end" ? checkOut : checkIn;
   const origin = isDateOnly(candidate) ? candidate : (mode === "end" && isDateOnly(checkIn) ? addDays(checkIn, 1) : minDate);

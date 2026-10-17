@@ -1,0 +1,74 @@
+.af-ai-widget { position: fixed; z-index: 75; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); font-family: var(--font-manrope), sans-serif; }
+.af-ai-launcher { position: relative; display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 10px 19px 10px 13px; border: 1px solid var(--line-strong); border-radius: 19px; color: var(--background); background: var(--accent); box-shadow: 0 8px 32px rgb(0 0 0 / 30%); cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.af-ai-launcher:hover { transform: translateY(-3px); box-shadow: 0 12px 38px rgb(0 0 0 / 40%); }
+.af-ai-launcherIcon { display: grid; place-items: center; }
+.af-ai-launcherLabel { display: grid; gap: 2px; text-align: left; font-size: 17px; line-height: 1.1; font-weight: 800; }
+.af-ai-launcherLabel > span { font-size: 8px; letter-spacing: .13em; font-weight: 700; }
+.af-ai-launcherDot { position: absolute; top: 10px; right: 10px; width: 5px; height: 5px; border-radius: 50%; background: var(--background); opacity: .6; }
+.af-ai-panel { position: absolute; right: 0; bottom: 74px; display: flex; flex-direction: column; width: min(410px, calc(100vw - 32px)); height: min(660px, calc(100dvh - 122px)); min-height: 240px; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 24px; background: var(--surface); color: var(--foreground); box-shadow: 0 24px 80px rgb(0 0 0 / 50%); animation: af-ai-enter .22s ease-out; }
+.af-ai-header { display: flex; align-items: center; flex: 0 0 auto; gap: 10px; padding: 18px 14px 16px 18px; background: var(--card); }
+.af-ai-avatar { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 46px; border: 1px solid var(--line-strong); border-radius: 14px; color: var(--accent); background: var(--soft-green); }
+.af-ai-heading { flex: 1; min-width: 0; }
+.af-ai-eyebrow { display: block; margin-bottom: 4px; color: var(--accent); font-size: 8px; font-weight: 800; letter-spacing: .15em; }
+.af-ai-heading h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.3; }
+.af-ai-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.af-ai-iconButton { display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 36px; border: 0; border-radius: 10px; color: var(--muted); background: transparent; cursor: pointer; }
+.af-ai-iconButton:hover { background: var(--soft-green); color: var(--foreground); }
+.af-ai-status { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; padding: 9px 18px; border-block: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+.af-ai-status > span:last-child { margin-left: auto; font-size: 9px; letter-spacing: .05em; white-space: nowrap; }
+.af-ai-statusDot { flex: 0 0 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--secondary); }
+.af-ai-statusDot[data-offline="true"] { background: var(--accent); }
+.af-ai-conversation { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 16px; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.af-ai-message { flex: 0 0 auto; max-width: 92%; min-width: 0; padding: 13px 15px; border: 1px solid var(--line); border-radius: 17px; overflow-wrap: anywhere; font-size: 12px; line-height: 1.75; }
+.af-ai-message p { margin: 0; white-space: pre-wrap; }
+.af-ai-assistant { border-bottom-left-radius: 5px; background: var(--card); }
+.af-ai-user { align-self: flex-end; border-color: var(--line-strong); border-bottom-right-radius: 5px; background: var(--soft-green); }
+.af-ai-messageLabel { display: block; margin-bottom: 6px; color: var(--accent); font-size: 9px; font-weight: 700; letter-spacing: .04em; }
+.af-ai-quick { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.af-ai-quick button { min-width: 0; min-height: 39px; padding: 8px 9px; border: 1px solid var(--line-strong); border-radius: 11px; background: transparent; color: var(--foreground); text-align: left; font-size: 10px; line-height: 1.5; cursor: pointer; transition: background .15s; }
+.af-ai-quick button:hover { background: var(--soft-green); }
+.af-ai-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+.af-ai-links a { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 5px 8px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--accent); font-size: 10px; text-decoration: none; line-height: 1.6; }
+.af-ai-links svg { flex-shrink: 0; }
+.af-ai-links a:hover { background: var(--soft-green); }
+.af-ai-composer { flex: 0 0 auto; padding: 12px 14px 13px; border-top: 1px solid var(--line); background: var(--card); }
+.af-ai-inputRow { display: flex; align-items: center; gap: 8px; padding: 7px 8px 7px 12px; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); }
+.af-ai-inputRow:focus-within { border-color: var(--accent); }
+.af-ai-inputRow textarea { width: 100%; min-width: 0; min-height: 42px; max-height: 90px; margin: 0; padding: 3px 0; border: 0; outline: 0; resize: none; box-shadow: none; color: var(--foreground); background: transparent; font: inherit; font-size: 12px; line-height: 1.6; }
+.af-ai-inputRow textarea::placeholder { color: var(--muted); }
+.af-ai-send { display: grid; place-items: center; flex: 0 0 37px; width: 37px; height: 37px; border: 0; border-radius: 10px; background: var(--accent); color: var(--background); cursor: pointer; }
+.af-ai-widget button:disabled { opacity: .45; cursor: default; }
+.af-ai-widget button:focus-visible, .af-ai-links a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.af-ai-privacy { display: flex; align-items: flex-start; gap: 5px; margin: 9px 1px 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.af-ai-privacy svg { flex-shrink: 0; margin-top: 1px; }
+.af-ai-typing { display: flex; align-items: center; gap: 4px; min-height: 26px; padding: 0 8px; color: var(--muted); }
+.af-ai-typing > span { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); animation: af-ai-pulse 1s infinite alternate; }
+.af-ai-typing > span:nth-child(2) { animation-delay: .15s; }
+.af-ai-typing > span:nth-child(3) { animation-delay: .3s; }
+.af-ai-typing small { margin-left: 6px; font-size: 10px; }
+.af-ai-notice, .af-ai-error { margin: 0; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 10px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.af-ai-error p { margin: 0; }
+.af-ai-error button { display: inline-flex; align-items: center; gap: 7px; margin-top: 8px; color: var(--accent); font-size: 11px; cursor: pointer; }
+@keyframes af-ai-enter { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes af-ai-pulse { to { opacity: .3; transform: translateY(-2px); } }
+@media (max-width: 480px) {
+  .af-ai-widget { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); }
+  .af-ai-launcher { min-height: 53px; padding: 9px 15px 9px 11px; border-radius: 17px; }
+  .af-ai-panel { position: fixed; inset: auto 8px max(80px, calc(env(safe-area-inset-bottom) + 72px)); width: auto; max-width: calc(100vw - 16px); height: min(650px, calc(100dvh - 100px)); border-radius: 20px; }
+  .af-ai-inputRow textarea { font-size: 16px; }
+  .af-ai-header { padding: 14px 10px 13px 14px; gap: 7px; }
+  .af-ai-heading h2 { font-size: 16px; }
+}
+@media (max-height: 500px) {
+  .af-ai-panel { bottom: 64px; height: calc(100dvh - 80px); min-height: 180px; }
+  .af-ai-header { padding-block: 8px; }
+  .af-ai-status, .af-ai-heading p, .af-ai-privacy { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .af-ai-panel, .af-ai-typing > span { animation: none; }
+  .af-ai-launcher { transition: none; }
+}
+
+/* Keep the two floating controls accessible when a PWA install offer is present. */
+body:has(.pwa-install) [data-ai-widget] { bottom: max(92px, calc(env(safe-area-inset-bottom) + 80px)); }
+body:has([data-ai-widget][data-open="true"]) .pwa-install { display: none; }

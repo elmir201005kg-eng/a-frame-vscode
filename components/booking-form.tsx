@@ -36,7 +36,7 @@ export function BookingForm({
   blocked?: string[];
 }) {
   const [state, action, pending] = useSafeAction(bookingAction, {}),
-    [values, setValues] = useState({ ...initial, ...contact });
+    [values, setValues] = useState({ ...initial, ...contact }), [promoCode, setPromoCode] = useState("");
   const { quote, code, checking, reset, check } = useAvailability();
   const labels = common.labels;
   function update(name: string, value: string) {
@@ -51,11 +51,12 @@ export function BookingForm({
       <input type="hidden" name="cabinId" value={cabinId} />
       <input type="hidden" name="requestKey" value={requestKey} />
       <fieldset disabled={pending}>
-        <PremiumDatePicker value={values} required disabled={pending} today={today} blocked={blocked} maxDate={addDays(today, 365)}
+        <PremiumDatePicker locale={locale} value={values} required disabled={pending} today={today} blocked={blocked} maxDate={addDays(today, 365)}
           labels={{ checkIn: labels.checkIn, checkOut: labels.checkOut }}
           onValueChange={(range) => { reset(); setValues(previous => ({ ...previous, ...range })); }} />
-        <GuestSelector label={labels.guests} required disabled={pending} value={values.guests} maxGuests={maxGuests} onValueChange={value => update("guests", value)} />
-        <PendingButton className="button button-outline" type="button" pending={checking} onClick={() => check({ cabinId, checkIn: values.checkIn, checkOut: values.checkOut, guests: values.guests })}>
+        <GuestSelector locale={locale} label={labels.guests} required disabled={pending} value={values.guests} maxGuests={maxGuests} onValueChange={value => update("guests", value)} />
+        <Field label={`${labels.promoCode} · ${labels.optional}`} name="promoCode" value={promoCode} maxLength={40} onChange={event => { setPromoCode(event.target.value); reset(); }} />
+        <PendingButton className="button button-outline" type="button" pending={checking} onClick={() => check({ cabinId, checkIn: values.checkIn, checkOut: values.checkOut, guests: values.guests, promoCode })}>
           {checking ? labels.checking : labels.confirmAvailability}
         </PendingButton>
         {quote && (

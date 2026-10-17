@@ -6,15 +6,17 @@ import { Icon } from "@/components/icon";
 import { useFormDesign } from "@/components/form-design-provider";
 import { formatNumber, interpolate, pluralize } from "@/app/i18n/format";
 import { isFirstInvalidControl } from "@/lib/form-controls";
+import type { Locale } from "@/app/i18n/config";
 
 export function GuestSelector({
-  value: controlled, defaultValue = "", onValueChange, maxGuests = 50, minGuests = 1, name = "guests",
+  locale, value: controlled, defaultValue = "", onValueChange, maxGuests = 50, minGuests = 1, name = "guests",
   disabled, required, label, placeholder, className = "",
 }: {
+  locale: Locale;
   value?: string; defaultValue?: string; onValueChange?: (value: string) => void; maxGuests?: number; minGuests?: number;
   name?: string; disabled?: boolean; required?: boolean; label?: string; placeholder?: string; className?: string;
 }) {
-  const { locale, common, text } = useFormDesign();
+  const { common, text } = useFormDesign(locale);
   const [local, setLocal] = useState(defaultValue), [open, setOpen] = useState(false);
   const value = controlled ?? local, count = Number(value);
   const input = useRef<HTMLInputElement>(null), trigger = useRef<HTMLButtonElement>(null);

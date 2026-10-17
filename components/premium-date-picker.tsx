@@ -8,6 +8,7 @@ import { useFormDesign } from "@/components/form-design-provider";
 import { addDays, isDateOnly, validStay } from "@/lib/stay-dates";
 import { formatNumber } from "@/app/i18n/format";
 import { isFirstInvalidControl } from "@/lib/form-controls";
+import type { Locale } from "@/app/i18n/config";
 
 function displayDate(value: string, months: string[], locale: "ru" | "kg" | "en") {
   if (!isDateOnly(value)) return "";
@@ -63,7 +64,7 @@ export function PremiumDateInput({
         <Popover.Content id={popupId} className="premium-menu premium-calendar-popover" data-premium-calendar
           aria-label={label} align="start" sideOffset={8} collisionPadding={12} onOpenAutoFocus={focusCalendar}>
           <div className="premium-popover-heading"><strong>{label}</strong><Popover.Close className="premium-icon-button" aria-label={text.close}><Icon name="x" size={18} /></Popover.Close></div>
-          <AvailabilityCalendar key={open ? value : "closed"} today={today || minimum} minDate={minimum} maxDate={max ? String(max) : undefined}
+          <AvailabilityCalendar locale={locale} key={open ? value : "closed"} today={today || minimum} minDate={minimum} maxDate={max ? String(max) : undefined}
             months={common.calendar.months} weekdays={common.calendar.weekdays} blocked={[]} common={common} selectionMode="single"
             checkIn={value} onDay={day => { change(day); setOpen(false); }} />
           {!required && <button type="button" className="premium-clear-button" onClick={() => { change(""); setOpen(false); }}>{text.clear}</button>}
@@ -75,17 +76,18 @@ export function PremiumDateInput({
 
 export type DateRangeValue = { checkIn: string; checkOut: string };
 export function PremiumDatePicker({
-  value: controlled, defaultValue = { checkIn: "", checkOut: "" }, onValueChange, today: suppliedToday,
+  locale, value: controlled, defaultValue = { checkIn: "", checkOut: "" }, onValueChange, today: suppliedToday,
   blocked = [], disabled, required, startName = "checkIn", endName = "checkOut", className = "", maxDate,
   labels, error,
 }: {
+  locale: Locale;
   value?: DateRangeValue; defaultValue?: DateRangeValue; onValueChange?: (value: DateRangeValue) => void;
   today?: string; blocked?: string[]; disabled?: boolean; required?: boolean;
   startName?: string; endName?: string; className?: string; maxDate?: string;
   labels?: { checkIn: string; checkOut: string }; error?: boolean;
 }) {
-  const design = useFormDesign(), today = suppliedToday || design.today;
-  const { common, text, locale } = design;
+  const design = useFormDesign(locale), today = suppliedToday || design.today;
+  const { common, text } = design;
   const [local, setLocal] = useState(defaultValue);
   const value = controlled ?? local;
   const [open, setOpen] = useState(false), [active, setActive] = useState<"checkIn" | "checkOut">("checkIn");
@@ -151,7 +153,7 @@ export function PremiumDatePicker({
         }}>
         <div className="premium-popover-heading"><strong>{fieldLabels[active]}</strong><Popover.Close className="premium-icon-button" aria-label={text.close}><Icon name="x" size={18} /></Popover.Close></div>
         <p className="premium-calendar-hint">{text.rangeHint}</p>
-        <AvailabilityCalendar key={open ? "open" : "closed"} today={today} months={common.calendar.months} weekdays={common.calendar.weekdays}
+        <AvailabilityCalendar locale={locale} key={open ? "open" : "closed"} today={today} months={common.calendar.months} weekdays={common.calendar.weekdays}
           blocked={blocked} common={common} checkIn={value.checkIn} checkOut={value.checkOut} maxDate={maxDate}
           selectionMode={active === "checkOut" && value.checkIn ? "end" : "start"} onDay={choose} />
         <div className="premium-popover-footer">

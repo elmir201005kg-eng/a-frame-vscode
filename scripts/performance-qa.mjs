@@ -4,6 +4,7 @@ import { randomBytes, scrypt } from "node:crypto";
 import { promisify } from "node:util";
 import { readdirSync, readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { resolve } from "node:path";
 
 dotenv.config({ quiet: true });
 const port = Number(process.env.E2E_PORT || 3107);
@@ -69,12 +70,13 @@ try {
     QA_SCHEMA: schema, QA_ADMIN_ID: ids.admin, QA_OWNER_ID: ids.owner, DEMO_MODE: "false", APP_URL: `http://localhost:${port}`,
     TELEGRAM_BOT_TOKEN: "", TELEGRAMM_KEY: "", TELEGRAM_ADMIN_CHAT_ID: "", ADMIN_OTP_SECRET: randomBytes(32).toString("hex"),
     GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", GOOGLE_CLIENT_SECRET_ID: "",
-    FINIK_API_KEY: "", FINIK_ACCOUNT_ID: "", FINIK_PRIVATE_KEY: "", FINIK_ENV: "beta" };
+    FINIK_API_KEY: "", FINIK_ACCOUNT_ID: "", FINIK_PRIVATE_KEY: "", FINIK_ENV: "beta",
+    UPLOAD_DIR: resolve("test-results-admin", schema, "uploads") };
   const production = process.env.QA_MODE !== "development";
   if (production && process.env.QA_REUSE_BUILD !== "true")
     await run(["node_modules/next/dist/bin/next", "build"], { ...env, NEXT_DIST_DIR: productionDir });
   const files = process.env.QA_SUITE === "forms" ? ["tests/auth.spec.ts", "tests/responsiveness.spec.ts", "tests/premium-forms.spec.ts"]
-    : process.env.QA_SUITE === "admin" ? ["tests/admin-period.spec.ts", "tests/admin.spec.ts"] : [];
+    : process.env.QA_SUITE === "admin" ? ["tests/admin-period.spec.ts", "tests/admin.spec.ts", "tests/admin-workspace.spec.ts"] : [];
   const filter = process.env.QA_GREP ? ["--grep", process.env.QA_GREP] : ["--grep-invert", "Google OAuth"];
   await run(["node_modules/@playwright/test/cli.js", "test", ...files, ...filter], { ...env, E2E_PRODUCTION: String(production) });
   if (process.env.QA_SUITE !== "admin" && !process.env.QA_GREP)

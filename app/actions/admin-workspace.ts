@@ -91,7 +91,7 @@ export async function promotionAdminAction(_: ActionState, form: FormData): Prom
         const code = text(form, "code", 0, 40).toUpperCase() || null;
         if (code && !/^[A-Z0-9][A-Z0-9_-]{2,39}$/.test(code)) fail("invalidFields");
         await lockCabin(tx, cabinId);
-        const data = { cabinId, title: text(form, "title", 1, 255), description: text(form, "description", 0, 2000) || null, code,
+        const data: Prisma.PromotionUncheckedCreateInput = { cabinId, title: text(form, "title", 1, 255), description: text(form, "description", 0, 2000) || null, code,
           discountType, discountValue: new Prisma.Decimal(discountValue.toFixed(2)), startDate, endDate, isActive: form.get("isActive") === "on" };
         const row = recordId ? await tx.promotion.update({ where: { id: recordId }, data }) : await tx.promotion.create({ data });
         await adminAudit(tx, user.id, "promotion.saved", "promotion", row.id, { title: data.title, code, discountValue, discountType });

@@ -3,7 +3,7 @@ import { adminPage } from "@/lib/admin-period";
 import { queryString } from "@/lib/admin-filters";
 import { categoryAdminAction, promotionAdminAction } from "@/app/actions/admin-workspace";
 import { AdminActionForm } from "@/components/admin-action-form";
-import { Field, SelectField, TextAreaField, StatusBadge } from "@/components/product-ui";
+import { Field, SelectField, TextAreaField } from "@/components/product-ui";
 import { PremiumCheckbox } from "@/components/premium-fields";
 import { AdminPageHeading, AdminFilters, AdminPagination, hidden, type AdminContext } from "@/components/admin-workspace-ui";
 import type { Category, Promotion } from "@/generated/prisma/client";

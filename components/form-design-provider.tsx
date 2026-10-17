@@ -20,8 +20,11 @@ export function FormDesignProvider({ locale, children }: { locale: Locale; child
   return <FormLocale.Provider value={locale}>{children}</FormLocale.Provider>;
 }
 
-export function useFormDesign() {
-  const locale = useContext(FormLocale);
+export function useFormDesign(explicitLocale?: Locale) {
+  const inheritedLocale = useContext(FormLocale);
+  // Controls with a page locale use the same serialized value for SSR and
+  // hydration instead of falling back to the provider's default language.
+  const locale = explicitLocale ?? inheritedLocale;
   const today = useSyncExternalStore(subscribeToday, bishkekToday, serverToday);
   return { locale, today, text: formMessages[locale], common: dictionaries[locale] };
 }

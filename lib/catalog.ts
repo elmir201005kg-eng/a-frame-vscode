@@ -25,6 +25,7 @@ export const cabinInclude = {
   location: { include: { region: true } },
   images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }] },
   amenities: { include: { amenity: true } },
+  categories: { where: { category: { isActive: true } }, include: { category: true } },
   rules: { where: { isActive: true } },
   owner: { include: { user: { select: { firstName: true, lastName: true, isActive: true } } } },
 } satisfies Prisma.CabinInclude;
@@ -70,6 +71,7 @@ export function cabinDto(cabin: CabinRecord, locale: Locale, favorites: string[]
       (locale === "kg" ? cabin.descriptionKg : locale === "en" ? cabin.descriptionEn : null) ||
       cabin.description,
     region: localizedName(cabin.location.region, locale),
+    categories: cabin.categories.map(item => ({ id: item.categoryId, name: localizedName(item.category, locale) })),
     regionSlug: cabin.location.region.slug,
     location: [
       localizedName(cabin.location.region, locale),

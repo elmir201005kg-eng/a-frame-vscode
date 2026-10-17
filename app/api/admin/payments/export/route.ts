@@ -20,9 +20,9 @@ export async function GET(request: Request) {
     const query = Object.fromEntries(params), where = paymentFilters(query);
     if (adminDateFilter(query).invalid) return Response.json({ error: "invalidDates" }, { status: 400, headers });
     const [common, text, last] = await Promise.all([translated<CommonDictionary>(locale, "common"), translated<AdminDictionary>(locale, "admin"), db.payment.findFirst({ where, orderBy: { id: "desc" }, select: { id: true } })]);
-    await db.auditLog.create({ data: { userId: user.id, action: "payment.exported", entityType: "payment", entityId: 0n, newData: { status: params.get("status"), from: params.get("from"), to: params.get("to") } } });
+    await db.auditLog.create({ data: { userId: user.id, action: "payment.exported", entityType: "payment", entityId: BigInt(0), newData: { status: params.get("status"), from: params.get("from"), to: params.get("to"), actorRole: user.role } } });
     const encoder = new TextEncoder();
-    let cursor = 0n, first = true, complete = false;
+    let cursor = BigInt(0), first = true, complete = false;
     const stream = new ReadableStream<Uint8Array>({
       async pull(controller) {
         if (complete) { controller.close(); return; }

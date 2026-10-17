@@ -99,7 +99,7 @@ export async function cabinAction(_: ActionState, form: FormData): Promise<Actio
         const existing = cabinId
           ? await tx.cabin.findFirst({
               where: { id: cabinId, ...(!admin ? { ownerId: owner } : {}) },
-              select: { id: true, locationId: true, status: true },
+              select: { id: true, locationId: true, status: true, title: true, pricePerNight: true, maxGuests: true, ownerId: true },
             })
           : null;
         if (cabinId && !existing) fail("notFound");
@@ -146,6 +146,8 @@ export async function cabinAction(_: ActionState, form: FormData): Promise<Actio
             action: existing ? "cabin.updated" : "cabin.created",
             entityType: "cabin",
             entityId: row.id,
+            oldData: existing ? { title: existing.title, pricePerNight: existing.pricePerNight.toString(), maxGuests: existing.maxGuests, ownerId: existing.ownerId.toString() } : Prisma.JsonNull,
+            newData: { title, slug, pricePerNight: data.pricePerNight.toString(), maxGuests: data.maxGuests, ownerId: owner.toString(), actorRole: user.role },
           },
         });
         return row;

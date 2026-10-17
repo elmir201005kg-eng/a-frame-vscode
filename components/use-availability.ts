@@ -16,7 +16,7 @@ export function useAvailability() {
     setQuote(null);
     setCode("");
   }
-  async function check(values: { cabinId: string; checkIn: string; checkOut: string; guests: string }) {
+  async function check(values: { cabinId: string; checkIn: string; checkOut: string; guests: string; promoCode?: string }) {
     if (current.current) return;
     if (!values.checkIn || !values.checkOut || values.checkOut <= values.checkIn) { setCode("invalidDates"); return; }
     if (!Number.isInteger(Number(values.guests)) || Number(values.guests) < 1) { setCode("invalidGuests"); return; }
@@ -26,7 +26,7 @@ export function useAvailability() {
     setQuote(null);
     setCode("");
     try {
-      const response = await fetch(`/api/availability?${new URLSearchParams(values)}`, {
+      const response = await fetch(`/api/availability?${new URLSearchParams({ ...values, promoCode: values.promoCode || "" })}`, {
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]), cache: "no-store",
       });
       const result = await response.json();

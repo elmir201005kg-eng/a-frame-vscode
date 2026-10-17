@@ -17,5 +17,6 @@ export function adminError(error: unknown) {
   return { code: code === "P2002" ? "duplicateRecord" : code === "P2003" ? "recordInUse" : "serverError" };
 }
 export async function adminAudit(tx: Prisma.TransactionClient, userId: bigint, action: string, entityType: string, entityId: bigint, newData?: Prisma.InputJsonObject, oldData?: Prisma.InputJsonObject) {
-  await tx.auditLog.create({ data: { userId, action, entityType, entityId, newData, oldData } });
+  const user = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true } });
+  await tx.auditLog.create({ data: { userId, action, entityType, entityId, newData: { ...newData, actorRole: user.role }, oldData } });
 }

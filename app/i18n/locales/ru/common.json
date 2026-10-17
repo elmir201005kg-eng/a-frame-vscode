@@ -322,7 +322,10 @@
     "promotionSaved": "Акция сохранена",
     "promotionDeleted": "Акция удалена",
     "cabinDeleted": "Домик удалён",
-    "securitySessionsRevoked": "Сессии завершены"
+    "securitySessionsRevoked": "Сессии завершены",
+    "userRegistered": "Регистрация пользователя",
+    "reviewCreated": "Новый отзыв",
+    "paymentExported": "Экспорт платежей"
   },
   "calendar": {
     "months": [

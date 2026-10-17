@@ -25,7 +25,9 @@ export function paymentFilters(query: AdminQuery): Prisma.PaymentWhereInput {
 }
 export function bookingFilters(query: AdminQuery): Prisma.BookingWhereInput {
   const q = queryString(query, "q"), status = queryString(query, "status"), payment = queryString(query, "payment"), range = adminDateFilter(query);
+  const userId = queryString(query, "userId");
   return {
+    ...(/^[1-9]\d{0,17}$/.test(userId) ? { userId: BigInt(userId) } : {}),
     ...(["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "REJECTED"].includes(status) ? { status: status as Prisma.EnumBookingStatusFilter["equals"] } : {}),
     ...(range.where ? { createdAt: range.where } : {}),
     ...(["PENDING", "PAID", "FAILED", "REFUNDED"].includes(payment) ? { payments: { some: { status: payment as Prisma.EnumPaymentStatusFilter["equals"] } } } : {}),
