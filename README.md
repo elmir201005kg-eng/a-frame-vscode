@@ -37,6 +37,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## База данных
 
+AI-консультант с Ollama/Groq, настройка бесплатной модели и проверки: [инструкция](docs/ai-consultant.md).
+
 Интеграция оплаты с фиксированной суммой 5 сомов: [Finik Pay](docs/finik-pay.md).
 
 Описание общих компонентов форм, календаря, фильтров и их проверки: [система форм A-FRAME KG](docs/form-design.md).
