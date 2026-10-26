@@ -4,7 +4,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { useEffect, useId, useRef, useState, type InputHTMLAttributes } from "react";
 import { AvailabilityCalendar } from "@/components/availability-calendar";
 import { Icon } from "@/components/icon";
-import { useFormDesign } from "@/components/form-design-provider";
+import { useFormDesign, useHydrated } from "@/components/form-design-provider";
 import { addDays, isDateOnly, validStay } from "@/lib/stay-dates";
 import { formatNumber } from "@/app/i18n/format";
 import { isFirstInvalidControl } from "@/lib/form-controls";
@@ -17,7 +17,7 @@ function displayDate(value: string, months: string[], locale: "ru" | "kg" | "en"
 }
 function focusCalendar(event: Event) {
   event.preventDefault();
-  requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-premium-calendar] .calendar-grid button[tabindex="0"]')?.focus());
+  requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-premium-calendar][data-state="open"] .calendar-grid button[tabindex="0"]')?.focus({ preventScroll: true }));
 }
 
 export function PremiumDateInput({
@@ -25,6 +25,7 @@ export function PremiumDateInput({
   className = "", ...props
 }: InputHTMLAttributes<HTMLInputElement> & { label: string; error?: boolean }) {
   const { today, common, text, locale } = useFormDesign();
+  const hydrated = useHydrated();
   const initial = String(defaultValue ?? ""), [local, setLocal] = useState(initial);
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null), input = useRef<HTMLInputElement>(null);
@@ -53,7 +54,7 @@ export function PremiumDateInput({
       }} />
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button id={id} ref={trigger} type="button" disabled={disabled} className={`premium-control premium-date-trigger ${className}`}
+        <button id={id} ref={trigger} type="button" disabled={disabled || !hydrated} className={`premium-control premium-date-trigger ${className}`}
           aria-label={`${label}${required ? `, ${text.required}` : ""}: ${displayDate(value, common.calendar.months, locale) || text.selectDate}`}
           data-invalid={error || props["aria-invalid"] || undefined}
           aria-describedby={props["aria-describedby"]} data-empty={!value || undefined} aria-controls={open ? popupId : undefined}>
@@ -62,7 +63,12 @@ export function PremiumDateInput({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content id={popupId} className="premium-menu premium-calendar-popover" data-premium-calendar
-          aria-label={label} align="start" sideOffset={8} collisionPadding={12} onOpenAutoFocus={focusCalendar}>
+          aria-label={label} align="start" sideOffset={8} collisionPadding={12} onOpenAutoFocus={focusCalendar}
+          onCloseAutoFocus={event => {
+            event.preventDefault();
+            const focused = document.activeElement;
+            if (!focused || focused === document.body || focused.closest(`[id="${popupId}"]`)) trigger.current?.focus();
+          }}>
           <div className="premium-popover-heading"><strong>{label}</strong><Popover.Close className="premium-icon-button" aria-label={text.close}><Icon name="x" size={18} /></Popover.Close></div>
           <AvailabilityCalendar locale={locale} key={open ? value : "closed"} today={today || minimum} minDate={minimum} maxDate={max ? String(max) : undefined}
             months={common.calendar.months} weekdays={common.calendar.weekdays} blocked={[]} common={common} selectionMode="single"
@@ -87,6 +93,7 @@ export function PremiumDatePicker({
   labels?: { checkIn: string; checkOut: string }; error?: boolean;
 }) {
   const design = useFormDesign(locale), today = suppliedToday || design.today;
+  const hydrated = useHydrated();
   const { common, text } = design;
   const [local, setLocal] = useState(defaultValue);
   const value = controlled ?? local;
@@ -112,7 +119,7 @@ export function PremiumDatePicker({
     if (active === "checkIn" || !isDateOnly(value.checkIn)) {
       const end = validStay(day, value.checkOut, today, blocked) ? value.checkOut : "";
       change({ checkIn: day, checkOut: end }); setActive("checkOut");
-      requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-premium-calendar] .calendar-grid button[tabindex="0"]')?.focus());
+      requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-premium-calendar][data-state="open"] .calendar-grid button[tabindex="0"]')?.focus({ preventScroll: true }));
     } else if (validStay(value.checkIn, day, today, blocked)) {
       change({ ...value, checkOut: day }); setOpen(false);
     }
@@ -132,7 +139,7 @@ export function PremiumDatePicker({
                 event.preventDefault();
                 if (isFirstInvalidControl((isStart ? startInput : endInput).current)) { show(name); (isStart ? startTrigger : endTrigger).current?.focus(); }
               }} />
-            <button type="button" id={id} ref={isStart ? startTrigger : endTrigger} disabled={disabled}
+            <button type="button" id={id} ref={isStart ? startTrigger : endTrigger} disabled={disabled || !hydrated}
               className="premium-control premium-date-trigger" data-empty={!value[name] || undefined}
               aria-haspopup="dialog" aria-expanded={open && active === name} aria-controls={open ? popupId : undefined}
               aria-label={`${fieldLabels[name]}${required ? `, ${text.required}` : ""}: ${displayDate(value[name], common.calendar.months, locale) || text.selectDate}`}

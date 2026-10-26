@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/image";
 import Link from "@/components/navigation-link";
 import { Icon } from "@/components/icon";
 import { PropertyFavorite } from "@/components/property-favorite";
@@ -12,6 +12,7 @@ export function PropertyCard({
   locale,
   common,
   next,
+  authenticated = true,
   stay,
   eager = false,
 }: {
@@ -19,6 +20,7 @@ export function PropertyCard({
   locale: Locale;
   common: CommonDictionary;
   next?: string;
+  authenticated?: boolean;
   stay?: { checkIn: string; checkOut: string; guests: string };
   eager?: boolean;
 }) {
@@ -55,6 +57,7 @@ export function PropertyCard({
           locale={locale}
           common={common}
           next={next || href}
+          authenticated={authenticated}
         />
       </div>
       <div className="cabin-content">

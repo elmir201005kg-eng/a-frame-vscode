@@ -62,9 +62,9 @@ async function asset(request, url) {
   try {
     return await fetch(request);
   } catch {
-    // Next Image URLs vary by screen size; use the bundled original when offline.
-    if (url.pathname === "/_next/image") {
-      const original = url.searchParams.get("url");
+    // Responsive image URLs vary by screen size; use the bundled original offline.
+    if (url.pathname === "/api/image") {
+      const original = url.searchParams.get("src");
       if (original?.startsWith("/images/") || original === "/brand/a-frame-logo.png") {
         const fallback = await cache.match(original);
         if (fallback) return fallback;
@@ -78,10 +78,10 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
   // API calls, mutations, RSC responses and external resources remain network-only.
-  if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/api/") || request.headers.has("RSC") || url.searchParams.has("_rsc")) return;
+  if (request.method !== "GET" || url.origin !== self.location.origin || (url.pathname.startsWith("/api/") && url.pathname !== "/api/image") || request.headers.has("RSC")) return;
   if (request.mode === "navigate") {
     event.respondWith(navigate(request, url));
-  } else if (PRECACHE_ASSETS.includes(url.pathname) || url.pathname === "/_next/image") {
+  } else if (PRECACHE_ASSETS.includes(url.pathname) || url.pathname === "/api/image") {
     event.respondWith(asset(request, url));
   }
 });

@@ -3,6 +3,8 @@ import { adminPage, adminPeriod } from "../lib/admin-period";
 import { csvRow } from "../lib/csv";
 import { adminDateFilter } from "../lib/admin-filters";
 import { isAdminRole } from "../lib/roles";
+import { addDays, isDateOnly, validStay } from "../lib/stay-dates";
+import { date } from "../lib/validation";
 
 test("admin periods use Bishkek midnight and reject invalid or unbounded ranges", () => {
   const now = new Date("2026-10-13T20:30:00Z"); // Already October 14 in Bishkek.
@@ -34,4 +36,14 @@ test("exports neutralize formulas and date filters reject invalid dates", () => 
   expect(adminDateFilter({ from: "2026-10-15", to: "2026-10-15" }).where?.gte?.toISOString()).toBe("2026-10-14T18:00:00.000Z");
   for (const role of ["ADMIN", "SUPER_ADMIN"]) expect(isAdminRole(role)).toBe(true);
   for (const role of ["USER", "OWNER", undefined, "admin"]) expect(isAdminRole(role)).toBe(false);
+});
+
+test("date boundaries reject unsupported years and keep valid late-year stays", () => {
+  expect(isDateOnly("0000-01-01")).toBe(false);
+  expect(() => date("0000-01-01")).toThrow("invalidDates");
+  for (const [value, count] of [["9999-12-31", 1], ["0001-01-01", -1], ["2026-10-22", Infinity]] as const)
+    expect(addDays(value, count)).toBe("");
+  expect(adminDateFilter({ to: "9999-12-31" }).invalid).toBe(true);
+  expect(adminDateFilter({ from: "0000-01-01" }).invalid).toBe(true);
+  expect(validStay("9999-12-30", "9999-12-31", "2026-10-22")).toBe(true);
 });

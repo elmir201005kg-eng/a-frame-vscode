@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { lockCabin } from "@/lib/booking";
 import { id, fail, InputError } from "@/lib/validation";
 import { removePhotoFile, storePhoto } from "@/lib/uploads";
 import { isAdminRole } from "@/lib/roles";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "@/server/cache";
 
 export async function POST(request: Request) {
   let filename: string | undefined;
@@ -80,10 +79,10 @@ export async function POST(request: Request) {
       { maxWait: 10000, timeout: 20000 },
     );
     revalidatePath("/", "layout");
-    return NextResponse.json({ ok: true });
+    return Response.json({ ok: true });
   } catch (error) {
     if (filename) await removePhotoFile(filename).catch(() => {});
-    return NextResponse.json(
+    return Response.json(
       { code: error instanceof InputError ? error.code : "uploadFailed" },
       { status: error instanceof InputError && error.code === "forbidden" ? 403 : 400 },
     );

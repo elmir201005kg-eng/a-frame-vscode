@@ -1,6 +1,6 @@
+import { cachedPublic } from "@/server/cache";
 import "server-only";
 import { cache } from "react";
-import { cacheLife, cacheTag } from "next/cache";
 import type common from "./locales/ru/common.json";
 import type page from "./locales/ru/catalog.json";
 import type { Locale } from "./config";
@@ -28,10 +28,9 @@ export const namespaces = [
 ] as const;
 export type Namespace = (typeof namespaces)[number];
 async function localeOverrides(locale: Locale) {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
-  cacheTag("translations", `translations:${locale}`);
-  return db.translation.findMany({ where: { locale }, select: { namespace: true, key: true, value: true } });
+  return cachedPublic(`translations:${locale}`, ["translations", `translations:${locale}`], async () => {
+    return db.translation.findMany({ where: { locale }, select: { namespace: true, key: true, value: true } });
+  });
 }
 const overridesFor = cache(async (locale: Locale) => {
   try {
@@ -61,7 +60,7 @@ export function leaf(object: Record<string, unknown>, key: string): unknown {
       object,
     );
 }
-export async function translated<T>(locale: Locale, namespace: Namespace): Promise<T> {
+export const translated = cache(async function translated<T>(locale: Locale, namespace: Namespace): Promise<T> {
   const [source, overrides] = await Promise.all([baseDictionary(locale, namespace), overridesFor(locale)]);
   const base = structuredClone(source);
   for (const override of overrides) {
@@ -77,7 +76,7 @@ export async function translated<T>(locale: Locale, namespace: Namespace): Promi
     parent[parts[parts.length - 1]] = override.value;
   }
   return base as T;
-}
+});
 export async function pageDictionaries(
   locale: Locale,
   page: Exclude<Namespace, "common" | "landing">,

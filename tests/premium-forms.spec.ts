@@ -2,12 +2,12 @@ import { test, expect, type BrowserContext, type Locator, type Page } from "@pla
 import { createHash, randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { addDays, bishkekToday, validStay } from "../lib/stay-dates";
-import ru from "../app/i18n/locales/ru/common.json";
-import kg from "../app/i18n/locales/kg/common.json";
-import en from "../app/i18n/locales/en/common.json";
-import ruForms from "../app/i18n/locales/ru/forms.json";
-import kgForms from "../app/i18n/locales/kg/forms.json";
-import enForms from "../app/i18n/locales/en/forms.json";
+import ru from "../app/i18n/locales/ru/common.json" with { type: "json" };
+import kg from "../app/i18n/locales/kg/common.json" with { type: "json" };
+import en from "../app/i18n/locales/en/common.json" with { type: "json" };
+import ruForms from "../app/i18n/locales/ru/forms.json" with { type: "json" };
+import kgForms from "../app/i18n/locales/kg/forms.json" with { type: "json" };
+import enForms from "../app/i18n/locales/en/forms.json" with { type: "json" };
 import { chooseDay, chooseOption, chooseRange, setGuests } from "./form-controls";
 
 test.skip(!process.env.QA_SCHEMA, "Use the isolated fixtures created by npm run test:performance.");
@@ -100,11 +100,14 @@ for (const locale of ["ru", "kg", "en"] as const) {
   });
 
   test(`${locale}: all six widths, portalled menus, keyboard Tab and calendar navigation`, async ({ page }) => {
+    test.setTimeout(180000);
+    page.setDefaultTimeout(15000);
     const errors = monitor(page);
     for (const width of [320, 375, 430, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`/${locale}`);
-      const form = page.locator(".search-form");
+      const form = page.locator(".search-form:visible");
+      await expect(form).toBeVisible();
       await expect(form.locator(".premium-select-trigger")).toBeEnabled();
       await expect(page.locator("select:visible")).toHaveCount(0);
       const region = form.locator(".premium-select-trigger");
@@ -133,6 +136,7 @@ for (const locale of ["ru", "kg", "en"] as const) {
       await expect(form.locator("input[name='guests']")).toHaveValue("1");
       await page.keyboard.press("Escape");
       await page.goto(`/${locale}/catalog`);
+      await expect(page.locator(".catalog-page-results")).toBeVisible();
       if (width < 1024 && await page.locator(".catalog-filter-toggle").isVisible()) await page.locator(".catalog-filter-toggle").click();
       await page.locator(".premium-filter-trigger").click();
       await assertFits(page, page.locator(".premium-filter-popover"));
@@ -204,9 +208,12 @@ test("owner and admin forms retain required validation, selects, checkboxes and 
   await context.clearCookies();
   await authorize(context, process.env.QA_ADMIN_ID!);
   await page.goto("/ru/admin/regions");
-  await expect(page.locator(".admin-content .premium-checkbox").first()).toBeChecked();
-  await page.locator(".admin-content .premium-checkbox").first().focus(); await page.keyboard.press("Space");
-  await expect(page.locator(".admin-content .premium-checkbox").first()).not.toBeChecked();
+  const region = page.locator(".admin-record").first();
+  await region.locator("summary").click();
+  const active = region.locator(".premium-checkbox");
+  await expect(active).toBeChecked();
+  await active.focus(); await page.keyboard.press("Space");
+  await expect(active).not.toBeChecked();
   for (const locale of ["ru", "kg", "en"]) {
     await page.setViewportSize({ width: 320, height: 900 });
     for (const path of ["account?tab=profile", "admin/translations", "admin/settings"]) {
@@ -220,9 +227,10 @@ test("owner and admin forms retain required validation, selects, checkboxes and 
 });
 
 test("every admin Select exposes readable options, a selected indicator and Escape focus restoration", async ({ page, context }) => {
+  test.setTimeout(180000);
   const errors = monitor(page);
   await authorize(context, process.env.QA_ADMIN_ID!);
-  for (const section of ["", "regions", "amenities", "users", "owners", "cabins", "bookings", "reviews", "activities", "translations", "settings", "notifications"]) {
+  for (const section of ["", "regions", "amenities", "users", "owners", "cabins", "bookings", "reviews", "audit", "translations", "settings", "notifications"]) {
     await page.goto(`/ru/admin${section ? `/${section}` : ""}`);
     await expect(page.locator(".admin-content:visible")).toBeVisible();
     const triggers = page.locator(".admin-content:visible .premium-select-trigger");

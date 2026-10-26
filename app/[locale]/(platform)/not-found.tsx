@@ -1,4 +1,4 @@
-import { locale as getLocale } from "next/root-params";
+import { locale as getLocale } from "@/server/context";
 import { defaultLocale, isLocale } from "@/app/i18n/config";
 import { ResourceUnavailable } from "@/components/resource-unavailable";
 

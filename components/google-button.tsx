@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/image";
 import { useEffect, useRef, useState } from "react";
 import { PendingButton } from "@/components/pending-button";
 import type { Locale } from "@/app/i18n/config";

@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { CalendarDays, Search } from "lucide-react";
-import { NavigationForm, useNavigationPending } from "@/components/navigation-form";
+import { NavigationForm } from "@/components/navigation-form";
 import { PremiumSelect } from "@/components/premium-select";
 import { PremiumDateInput } from "@/components/premium-date-picker";
 import { PremiumInput } from "@/components/premium-fields";
@@ -10,7 +11,7 @@ import type { Locale } from "@/app/i18n/config";
 import type { CommonDictionary } from "@/app/i18n/platform";
 
 function Submit({ label, search = false }: { label: string; search?: boolean }) {
-  const pending = useNavigationPending();
+  const { pending } = useFormStatus();
   return <button type="submit" className="admin-button" disabled={pending} aria-busy={pending}>{pending ? <span className="ui-spinner" /> : search ? <Search size={16} /> : null}{label}</button>;
 }
 export function DashboardPeriod({ locale, text, value, start, end, today, path = "" }: { locale: Locale; text: AdminDictionary["dashboard"]; value: string; start: string; end: string; today: string; path?: string }) {

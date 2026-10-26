@@ -2,7 +2,7 @@ import { isAdminRole } from "@/lib/roles";
 import "server-only";
 import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { OAuth2Client, CodeChallengeMethod } from "google-auth-library";
-import { cookies } from "next/headers";
+import { cookies } from "@/server/context";
 import type { Locale } from "@/app/i18n/config";
 import { isLocale } from "@/app/i18n/config";
 import { db } from "@/lib/db";

@@ -1,19 +1,19 @@
 import { isAdminRole } from "@/lib/roles";
 import "server-only";
 import { cache } from "react";
-import { cookies } from "next/headers";
-import { io } from "next/cache";
-import { redirect } from "next/navigation";
+import { cookies } from "@/server/context";
+import { redirect } from "@/server/navigation";
 import { createHash, randomBytes } from "node:crypto";
 import type { Locale } from "@/app/i18n/config";
-import { db, databaseTable } from "@/lib/db";
+import { db } from "@/lib/db";
 import { fail, safeNext } from "@/lib/validation";
+export { throttle } from "@/lib/throttle";
 
 const cookieName = "a-frame-session";
 const digest = (token: string) => createHash("sha256").update(token).digest("hex");
 export const getUser = cache(async () => {
   // Session expiry must be evaluated for this request, including partial prefetches.
-  await io();
+
   const token = (await cookies()).get(cookieName)?.value;
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const session = await db.session.findUnique({
@@ -85,13 +85,4 @@ export async function destroySession() {
   if (token && /^[a-f0-9]{64}$/.test(token))
     await db.session.deleteMany({ where: { id: digest(token) } });
   store.delete(cookieName);
-}
-export async function throttle(key: string, limit = 10) {
-  const hashed = digest(key);
-  const rows = await db.$queryRaw<{ attempts: number }[]>`
-    INSERT INTO ${databaseTable("auth_throttles")} AS auth_throttles (key, attempts, expires_at) VALUES (${hashed}, 1, NOW() + INTERVAL '15 minutes')
-    ON CONFLICT (key) DO UPDATE SET attempts = CASE WHEN auth_throttles.expires_at < NOW() THEN 1 ELSE auth_throttles.attempts + 1 END,
-    expires_at = CASE WHEN auth_throttles.expires_at < NOW() THEN NOW() + INTERVAL '15 minutes' ELSE auth_throttles.expires_at END RETURNING attempts
-  `;
-  if (rows[0].attempts > limit) fail("tooManyAttempts");
 }

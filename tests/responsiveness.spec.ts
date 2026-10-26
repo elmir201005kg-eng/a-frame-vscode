@@ -1,7 +1,7 @@
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { Pool } from "pg";
-import ru from "../app/i18n/locales/ru/common.json";
+import ru from "../app/i18n/locales/ru/common.json" with { type: "json" };
 import { chooseOption, chooseRange, setGuests } from "./form-controls";
 import { FINIK_PAYMENT_METHOD } from "../lib/finik-config";
 
@@ -25,7 +25,7 @@ async function session(context: BrowserContext, userId: string) {
   await context.addCookies([{ name: "a-frame-session", value: token, url: `http://localhost:${process.env.E2E_PORT || 3107}`, httpOnly: true, sameSite: "Lax" }]);
 }
 
-test("search, pagination, cabin, language and brand preserve client navigation", async ({ page }) => {
+test("search, pagination, cabin, language and home link preserve client navigation", async ({ page }) => {
   const errors = monitor(page);
   let documents = 0;
   page.on("request", request => { if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents++; });
@@ -41,7 +41,7 @@ test("search, pagination, cabin, language and brand preserve client navigation",
   await expect(page.locator(".stay-selector")).toBeVisible();
   await chooseOption(page, page.locator(".site-header .language-switcher .premium-select-trigger:visible"), "English", "EN");
   await expect(page).toHaveURL(/\/en\/cabins\/qa-cabin-/);
-  await page.locator(".site-header .brand:visible").click();
+  await page.locator(".desktop-nav a[href='/en']:visible").click();
   await expect(page).toHaveURL(/\/en$/);
   await expect(page.locator(".hero:visible")).toBeVisible();
   expect(documents).toBe(before);
@@ -101,7 +101,7 @@ test("favorite persists, booking is idempotent and checkout state stays real", a
   await page.locator(".booking-form").getByRole("button", { name: ru.labels.confirmAvailability }).click();
   await expect(page.locator(".booking-quote")).toBeVisible();
   const requestKey = await page.locator("[name='requestKey']").inputValue();
-  const submitted = page.waitForRequest(request => request.method() === "POST" && !!request.headers()["next-action"]);
+  const submitted = page.waitForRequest(request => request.method() === "POST" && !!request.headers()["x-server-action"]);
   await page.locator(".booking-form").getByRole("button", { name: ru.labels.book, exact: true }).click();
   const request = await submitted;
   await expect(page).toHaveURL(/\/ru\/bookings\/\d+$/);
@@ -136,6 +136,7 @@ test("admin updates invalidate cached translations, references and public settin
   // Remove via the same real admin action, so the test also verifies invalidation.
   const record = page.locator(".admin-record").filter({ hasText: "labels.search" }).first();
   await record.locator("button[type='submit']").click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Подтвердить", exact: true }).click();
   await expect(record).toHaveCount(0);
   await anonymous.reload();
   await expect(anonymous.locator(".catalog-filters-content button[type='submit']")).toHaveText(ru.labels.search);

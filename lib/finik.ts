@@ -41,10 +41,12 @@ export function finikRequestUrl(request: Request): string | null {
     if (!rawOrigin) return null;
     const origin = new URL(rawOrigin);
     if (!["http:", "https:"].includes(origin.protocol) || origin.origin !== rawOrigin) return null;
+    const requestHost = request.headers.get("host") || new URL(request.url).host;
     const canonical = configuredAppUrl();
-    if (canonical ? new URL(canonical).origin !== origin.origin
-      : origin.host !== (request.headers.get("host") || new URL(request.url).host)) return null;
-    // Next.js may construct request.url using its internal host behind a reverse proxy.
+    // The browser can use localhost while Finik callbacks use a public HTTPS URL.
+    // Also allow the configured origin when a reverse proxy rewrites Host.
+    if (origin.host !== requestHost && (!canonical || new URL(canonical).origin !== origin.origin)) return null;
+    // Use the validated browser origin when a reverse proxy rewrites the server host.
     return new URL(new URL(request.url).pathname, origin).toString();
   } catch { return null; }
 }
@@ -123,8 +125,9 @@ export async function createFinikPayment(data: {
   const location = response.headers.get("location");
   if (!location) throw new Error("Finik payment URL is missing");
   const paymentUrl = new URL(location, `https://${config.host}`);
-  if (paymentUrl.protocol !== "https:" || paymentUrl.username || paymentUrl.password ||
-      paymentUrl.searchParams.get("status")?.toLowerCase() === "failed")
+  // Finik checkout URLs can include status=failed before the customer pays.
+  // Only a verified webhook determines the payment outcome.
+  if (paymentUrl.protocol !== "https:" || paymentUrl.username || paymentUrl.password)
     throw new Error("Finik returned an invalid payment URL");
   return paymentUrl.toString();
 }
@@ -172,7 +175,8 @@ export function parseFinikWebhook(body: unknown): FinikWebhookEvent | null {
   if (!record(metadata) || typeof metadata.bookingId !== "string" || !/^[1-9]\d{0,17}$/.test(metadata.bookingId) ||
       typeof metadata.userId !== "string" || !/^[1-9]\d{0,17}$/.test(metadata.userId) ||
       typeof metadata.paymentId !== "string" || !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(metadata.paymentId)) return null;
-  const status = typeof body.status === "string" ? body.status.toUpperCase() : "";
+  const providerStatus = typeof body.status === "string" ? body.status.toUpperCase() : "";
+  const status = providerStatus === "SUCCESS" ? "SUCCEEDED" : providerStatus;
   if ((status !== "SUCCEEDED" && status !== "FAILED") || body.amount !== FINIK_PAYMENT_AMOUNT ||
       body.data.accountId !== accountId ||
       (body.fields.paymentId !== undefined && body.fields.paymentId !== metadata.paymentId) ||

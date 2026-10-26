@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/catalog.json"],"sourcesContent":["{\"title\":\"Өз жайыңызды табыңыз\",\"eyebrow\":\"КЫРГЫЗСТАНДАГЫ ҮЙЛӨР\",\"description\":\"Эс алуу үчүн багытты, күндөрдү жана ыңгайлуулуктарды тандаңыз.\"}"],"names":[],"mappings":""}}]
-}

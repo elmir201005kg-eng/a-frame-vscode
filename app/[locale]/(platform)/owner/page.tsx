@@ -1,7 +1,7 @@
 import { isAdminRole } from "@/lib/roles";
 import { ResourceUnavailable } from "@/components/resource-unavailable";
 import Link from "@/components/navigation-link";
-import { redirect } from "next/navigation";
+import { redirect } from "@/server/navigation";
 import { routeLocale } from "@/lib/route";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";

@@ -13,7 +13,7 @@ import type { AdminSection } from "@/lib/admin-navigation";
 import type { AdminQuery } from "@/lib/admin-period";
 import type { Locale } from "@/app/i18n/config";
 
-export const workspaceSections = ["cabins", "bookings", "payments", "calendar", "categories", "promotions", "users", "activities", "audit", "settings", "messages", "notifications", "analytics"] as const;
+export const workspaceSections = ["cabins", "bookings", "payments", "calendar", "categories", "promotions", "users", "audit", "settings", "messages", "notifications", "analytics"] as const;
 export async function AdminWorkspace({ locale, section, query }: { locale: Locale; section: AdminSection; query: AdminQuery }) {
   const user = await requireAdmin(locale);
   const [common, text] = await Promise.all([translated<CommonDictionary>(locale, "common"), translated<AdminDictionary>(locale, "admin")]);
@@ -26,8 +26,7 @@ export async function AdminWorkspace({ locale, section, query }: { locale: Local
     case "categories": return <AdminTaxonomy ctx={ctx} />;
     case "promotions": return <AdminTaxonomy ctx={ctx} promotions />;
     case "users": return <AdminPeople ctx={ctx} />;
-    case "activities": return <AdminAudit ctx={ctx} />;
-    case "audit": return <AdminAudit ctx={ctx} adminOnly />;
+    case "audit": return <AdminAudit ctx={ctx} />;
     case "settings": return <AdminSettings ctx={ctx} />;
     case "messages": return <AdminCommunications ctx={ctx} messages />;
     case "notifications": return <AdminCommunications ctx={ctx} />;

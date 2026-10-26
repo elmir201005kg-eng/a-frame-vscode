@@ -72,7 +72,8 @@
     "demoHint": "This property and its photographs are for demonstration. It is not a verified rental offer.",
     "demoBook": "Create a test request",
     "demoBooking": "Test booking request",
-    "demoBookingHint": "Demonstration mode: only a test request is created. Real accommodation, payments and host confirmation are unavailable.",
+    "demoBookingHint": "A test request with a 5 KGS payment through Finik Pay. A real stay and host confirmation are not included.",
+    "demoPaymentHint": "Finik Pay · {amount} KGS",
     "addFavorite": "Save cabin",
     "removeFavorite": "Remove saved cabin",
     "backCatalog": "Back to cabins",
@@ -209,7 +210,8 @@
     "sendNotification": "Send notification",
     "recipient": "Recipient ID",
     "message": "Message",
-    "promoCode": "Promo code"
+    "promoCode": "Promo code",
+    "paymentProviderUnavailable": "Finik payments are temporarily unavailable. Contact support for details."
   },
   "statuses": {
     "PENDING": "Awaiting confirmation",

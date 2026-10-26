@@ -1,6 +1,6 @@
 import { isAdminRole } from "@/lib/roles";
-import type { Metadata } from "next";
-import Image from "next/image";
+import type { Metadata } from "@/server/types";
+import Image from "@/components/image";
 import Link from "@/components/navigation-link";
 import { Suspense } from "react";
 import { LogoutForm } from "@/components/logout-form";
@@ -13,7 +13,7 @@ import { PageHeading } from "@/components/product-ui";
 import { getPendingAdminLogin } from "@/lib/admin-two-factor";
 import { getUser } from "@/lib/auth";
 import { routeLocale } from "@/lib/route";
-import { redirect } from "next/navigation";
+import { redirect } from "@/server/navigation";
 
 export const instant = false;
 export const metadata: Metadata = {
@@ -44,7 +44,7 @@ async function AdminLoginContent({ params, searchParams }: AdminLoginPageProps) 
     <div className="admin-auth-page" lang={localeSettings[locale].htmlLang}>
       <a className="skip-link" href="#admin-auth-content">{text.skipContent}</a>
       <header className="admin-auth-header">
-        <Brand href={`/${locale}`} label={common.nav.home} inverse />
+        <Brand inverse />
         <nav className="admin-auth-languages" aria-label={text.languageLabel}>
           <Icon name="globe" size={16} />
           {locales.map((language) => (

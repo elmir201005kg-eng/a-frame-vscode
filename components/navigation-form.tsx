@@ -1,28 +1,18 @@
 "use client";
 
-import Form from "next/form";
-import { useRouter } from "next/navigation";
-import { createContext, useContext, useTransition, type ComponentProps } from "react";
+import type { FormHTMLAttributes } from "react";
+import { normalizeHref, useRouter } from "@/client/router";
 
-const NavigationPending = createContext(false);
-export const useNavigationPending = () => useContext(NavigationPending);
-
-export function NavigationForm({ children, action, onSubmit, ...props }: Omit<ComponentProps<typeof Form>, "action"> & { action: string }) {
+export function NavigationForm({ children, action, onSubmit, scroll, ...props }: Omit<FormHTMLAttributes<HTMLFormElement>, "action"> & { action: string; scroll?: boolean }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  return <NavigationPending.Provider value={pending}>
-    <Form {...props} action={action} aria-busy={pending} onSubmit={(event) => {
-      onSubmit?.(event);
-      if (event.defaultPrevented) return;
-      event.preventDefault();
-      if (pending) return;
-      // Capture successful controls before a pending UI can disable them.
-      const target = new URL(action, window.location.href);
-      target.search = "";
-      for (const [name, value] of new FormData(event.currentTarget)) {
-        if (typeof value === "string" && value) target.searchParams.append(name, value);
-      }
-      startTransition(() => router.push(`${target.pathname}${target.search}`, { scroll: props.scroll ?? true }));
-    }}>{children}</Form>
-  </NavigationPending.Provider>;
+  const target = normalizeHref(action);
+  return <form {...props} action={target} method="get" onSubmit={event => {
+    onSubmit?.(event);
+    if (event.defaultPrevented || !navigator.onLine) return;
+    event.preventDefault();
+    const form = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
+    const query = new URLSearchParams();
+    for (const [key, value] of form) if (typeof value === "string") query.append(key, value);
+    void router.push(`${target}${query.size ? `?${query}` : ""}`, { scroll });
+  }}>{children}</form>;
 }

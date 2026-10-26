@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/cabin.json"],"sourcesContent":["{\"title\":\"Ваш дом вдали от суеты\",\"eyebrow\":\"ВАШ СЛЕДУЮЩИЙ ОТДЫХ\",\"description\":\"Все детали для спокойного путешествия.\"}"],"names":[],"mappings":""}}]
-}

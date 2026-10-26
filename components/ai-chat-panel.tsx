@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/navigation-link";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import type { Locale } from "@/app/i18n/config";
 import { aiText } from "@/app/i18n/ai";

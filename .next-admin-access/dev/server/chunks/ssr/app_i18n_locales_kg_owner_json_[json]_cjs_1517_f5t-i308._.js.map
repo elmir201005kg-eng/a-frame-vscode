@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/owner.json"],"sourcesContent":["{\"title\":\"Сиздин меймандостугуңуз\",\"eyebrow\":\"ҮЙ ЭЭСИНИН КАБИНЕТИ\",\"description\":\"Үйлөрдү, календарды жана коноктордун суроо-талаптарын башкарыңыз.\"}"],"names":[],"mappings":""}}]
-}

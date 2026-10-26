@@ -1,5 +1,6 @@
 import type { Locale } from "@/app/i18n/config";
 import { isLocale } from "@/app/i18n/config";
+import { isDateOnly } from "@/lib/stay-dates";
 
 export class InputError extends Error {
   constructor(public code: string) {
@@ -56,7 +57,7 @@ export function password(value: unknown) {
   return value;
 }
 export function date(value: unknown) {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) fail("invalidDates");
+  if (typeof value !== "string" || !isDateOnly(value)) fail("invalidDates");
   const parsed = new Date(value + "T00:00:00Z");
   if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value)
     fail("invalidDates");

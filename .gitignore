@@ -22,7 +22,12 @@
 /.next-forms-qa-production/
 /.next-forms-qa-dev/
 /.next-hydration-qa/
+/.next-gallery-qa/
+/.next-demo-checkout-qa/
+/test-results-demo-checkout/
 /playwright-report/
+/performance-results/
+/test-results-performance/
 
 # next.js
 /.next/
@@ -60,3 +65,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# React / Vite build output and archived Next caches
+/dist/
+/dist-*/
+/test-results-*/
+/.next-*/

@@ -4,7 +4,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { Signer } from "@mancho.devs/authorizer";
 import { createFinikPayment, finikConfiguration, finikRequestUrl, finikWebhookHost, isTimestampValid, parseFinikWebhook, verifyFinikWebhook } from "@/lib/finik";
 import { createFinikSigner } from "@/lib/finik-signer";
-import { applyFinikWebhook, prepareFinikPayment } from "@/lib/finik-payments";
+import { applyFinikWebhook, prepareFinikPayment, startFinikPayment } from "@/lib/finik-payments";
 import { db } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
 import { POST as webhookPost } from "@/app/api/finik/webhook/route";
@@ -12,13 +12,16 @@ import { POST as webhookPost } from "@/app/api/finik/webhook/route";
 const paymentId = "11111111-1111-4111-8111-111111111111";
 const envNames = ["FINIK_ENV", "FINIK_API_KEY", "FINIK_ACCOUNT_ID", "FINIK_PRIVATE_KEY", "NEXTAUTH_URL", "NEXT_PUBLIC_APP_URL", "APP_URL"];
 let savedEnv: Record<string, string | undefined>;
+let savedDatabase: Pick<typeof db, "$transaction" | "$queryRaw" | "payment">;
 beforeEach(() => {
+  savedDatabase = { $transaction: db.$transaction, $queryRaw: db.$queryRaw, payment: db.payment };
   savedEnv = Object.fromEntries(envNames.map((key) => [key, process.env[key]]));
   for (const key of envNames) delete process.env[key];
   Object.assign(process.env, { FINIK_ENV: "beta", FINIK_API_KEY: "test-api-key", FINIK_ACCOUNT_ID: "test-account" });
 });
 afterEach(() => {
   mock.restoreAll();
+  Object.assign(db, savedDatabase);
   for (const key of envNames) {
     if (savedEnv[key] === undefined) delete process.env[key];
     else process.env[key] = savedEnv[key];
@@ -86,6 +89,7 @@ test("canonical webhook signature verifies and rejects changed amount, timestamp
   const signature = await new Signer(data).sign(privateKey);
   assert.ok(await createFinikSigner(data).verify(publicKey, signature));
   assert.equal(await createFinikSigner({ ...data, body: { ...body, amount: 1 } }).verify(publicKey, signature), false);
+  assert.equal(await createFinikSigner({ ...data, body: { ...body, status: "success" } }).verify(publicKey, signature), false);
   assert.equal(await createFinikSigner({ ...data, headers: { ...data.headers, Host: "attacker.test" } }).verify(publicKey, signature), false);
   assert.equal(await createFinikSigner({ ...data, headers: { ...data.headers, "x-api-timestamp": "1" } }).verify(publicKey, signature), false);
   assert.equal(await verifyFinikWebhook(signature, data.headers["x-api-timestamp"], body, { host: "example.test" }), false);
@@ -118,14 +122,38 @@ test("public origins work behind a reverse proxy while foreign origins are rejec
   assert.equal(finikRequestUrl(new Request("https://example.test/api/finik/create-payment")), null);
   process.env.APP_URL = "https://canonical.test";
   assert.equal(finikRequestUrl(request("https://canonical.test", "localhost:3001")), "https://canonical.test/api/finik/create-payment");
-  assert.equal(finikRequestUrl(request("https://example.test")), null);
+  assert.equal(finikRequestUrl(request("https://example.test")), "https://example.test/api/finik/create-payment");
   assert.equal(finikWebhookHost(request("https://canonical.test", "localhost:3001")), "canonical.test");
+});
+
+test("local checkout accepts its own origin with separate public Finik callbacks and rejects foreign requests", async () => {
+  process.env.APP_URL = "https://callbacks.example.test";
+  const request = (origin: string, extra: Record<string, string> = {}) => new Request("http://localhost:3001/api/finik/create-payment", {
+    headers: { host: "localhost:3001", origin, ...extra },
+  });
+  const requestUrl = finikRequestUrl(request("http://localhost:3001", { "sec-fetch-site": "same-origin" }));
+  assert.equal(requestUrl, "http://localhost:3001/api/finik/create-payment");
+  for (const origin of ["http://localhost:3000", "https://attacker.test", "null", "https://callbacks.example.test/path", "https://user:password@callbacks.example.test", "file://localhost"])
+    assert.equal(finikRequestUrl(request(origin)), null);
+  assert.equal(finikRequestUrl(request("https://attacker.test", { "x-forwarded-host": "attacker.test" })), null);
+  assert.equal(finikRequestUrl(request("http://localhost:3001", { "sec-fetch-site": "cross-site" })), null);
+  assert.equal(finikRequestUrl(request("https://callbacks.example.test", { "sec-fetch-site": "cross-site" })), null);
+
+  mock.method(globalThis, "fetch", async (_url: unknown, init: RequestInit) => {
+    const body = JSON.parse(init.body as string);
+    assert.equal(body.Amount, 5);
+    assert.equal(body.RedirectUrl, "https://callbacks.example.test/ru/bookings/20?payment=success");
+    assert.equal(body.Data.webhookUrl, "https://callbacks.example.test/api/finik/webhook");
+    return new Response(null, { status: 302, headers: { location: "https://pay.example.test/qr" } });
+  });
+  assert.equal(await createFinikPayment({ ...paymentData, requestUrl: requestUrl! }), "https://pay.example.test/qr");
 });
 
 test("provider errors and invalid redirect URLs fail without exposing response bodies", async () => {
   for (const response of [
     new Response("secret-provider-data", { status: 401 }), new Response(null, { status: 302 }),
-    new Response(null, { status: 302, headers: { location: "https://pay.example.test/?status=failed" } }),
+    new Response(null, { status: 302, headers: { location: "http://pay.example.test/qr" } }),
+    new Response(null, { status: 302, headers: { location: "https://user:password@pay.example.test/qr" } }),
     new Response(null, { status: 302, headers: { location: "javascript:alert(1)" } }),
   ]) {
     const fetch = mock.method(globalThis, "fetch", async () => response);
@@ -148,6 +176,29 @@ test("webhook validates amount, account, payment ID, metadata, and documented st
   ]) assert.equal(parseFinikWebhook(invalid), null);
 });
 
+test("success and succeeded receipts normalize to the same paid event without bypassing payment validation", async () => {
+  const body = webhook();
+  const expected = parseFinikWebhook(body)!;
+  for (const status of ["success", "SUCCESS", "Success", "succeeded", "SUCCEEDED", "Succeeded"]) {
+    const receipt = { ...body, status };
+    const event = parseFinikWebhook(receipt);
+    assert.deepEqual(event, expected);
+    assert.equal(parseFinikWebhook({ ...receipt, amount: 500 }), null);
+    assert.equal(parseFinikWebhook({ ...receipt, data: { ...body.data, accountId: "another-account" } }), null);
+    assert.equal(parseFinikWebhook({ ...receipt, fields: { ...body.fields, paymentId: "another-payment" } }), null);
+    assert.equal(parseFinikWebhook({ ...receipt, data: { ...body.data, metadata: "invalid" } }), null);
+    const fake = databaseDouble();
+    assert.deepEqual(await applyFinikWebhook(event!, fake.client), { duplicate: false });
+    assert.equal(fake.payments[0].status, "PAID");
+    assert.equal(fake.payments[0].transactionId, body.transactionId);
+    assert.deepEqual(await applyFinikWebhook(event!, fake.client), { duplicate: true });
+    assert.equal(fake.audits.length, 1);
+  }
+  for (const status of ["pending", "paid", "successfully", "", null]) {
+    assert.equal(parseFinikWebhook({ ...body, status }), null);
+  }
+});
+
 test("webhook endpoint rejects missing signatures, stale timestamps, malformed JSON, and invalid signatures before DB writes", async () => {
   mock.method(console, "log", () => {});
   mock.method(console, "warn", () => {});
@@ -165,14 +216,15 @@ test("webhook endpoint rejects missing signatures, stale timestamps, malformed J
   }
 });
 
-function databaseDouble(options: { status?: string; demo?: boolean; paymentStatus?: string; url?: string; providerId?: string | null; method?: string; amount?: number } = {}) {
+function databaseDouble(options: { status?: string; demo?: boolean; noPayments?: boolean; paymentStatus?: string; url?: string; providerId?: string | null; method?: string; amount?: number } = {}) {
   const booking = {
-    id: BigInt(20), userId: BigInt(10), cabinId: BigInt(30), bookingNumber: "AF-TEST", status: options.status || "PENDING",
+    id: BigInt(20), userId: BigInt(10), cabinId: BigInt(30), bookingNumber: options.demo ? "DEMO-TEST" : "AF-TEST", status: options.status || "PENDING",
     cabin: { isDemo: options.demo || false, owner: { userId: BigInt(40) } },
   };
-  const payments = [{ id: BigInt(1), bookingId: booking.id, userId: booking.userId, currency: "KGS", amount: new Prisma.Decimal(options.amount ?? 5),
+  const initialPayment = { id: BigInt(1), bookingId: booking.id, userId: booking.userId, currency: "KGS", amount: new Prisma.Decimal(options.amount ?? 5),
     paymentMethod: options.method || "FINIK_QR", providerPaymentId: options.providerId === undefined ? paymentId : options.providerId,
-    paymentUrl: options.url || null, createdAt: new Date(Date.now() - 60000), status: options.paymentStatus || "PENDING", transactionId: null as string | null, paidAt: null as Date | null }];
+    paymentUrl: options.url || null, createdAt: new Date(Date.now() - 60000), status: options.paymentStatus || "PENDING", transactionId: null as string | null, paidAt: null as Date | null };
+  const payments = options.noPayments ? [] : [initialPayment];
   const notifications: unknown[] = [], audits: unknown[] = [];
   const tx = {
     siteSetting: { findUnique: async () => null },
@@ -192,7 +244,7 @@ function databaseDouble(options: { status?: string; demo?: boolean; paymentStatu
         return payment;
       },
       create: async ({ data }: { data: Record<string, unknown> }) => {
-        const payment = { ...payments[0], ...data, id: BigInt(payments.length + 1), status: "PENDING", paymentUrl: null, transactionId: null, paidAt: null };
+        const payment = { ...initialPayment, ...data, amount: new Prisma.Decimal(data.amount as number), id: BigInt(payments.length + 1), status: "PENDING", paymentUrl: null, transactionId: null, paidAt: null };
         payments.push(payment);
         return payment;
       },
@@ -201,7 +253,7 @@ function databaseDouble(options: { status?: string; demo?: boolean; paymentStatu
     auditLog: { create: async ({ data }: { data: unknown }) => audits.push(data) },
   };
   const client = { $transaction: async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx) } as unknown as Pick<typeof db, "$transaction">;
-  return { booking, payments, notifications, audits, client };
+  return { booking, payments, notifications, audits, client, tx };
 }
 
 test("successful webhooks persist receipt once and delayed failures cannot downgrade it", async () => {
@@ -235,13 +287,86 @@ test("late receipt after cancellation is recorded and requests refund reconcilia
   assert.ok(fake.notifications.every((row) => (row as { type: string }).type === "payment.refundRequired"));
 });
 
-test("payment attempts reject other guests, demo, cancelled, and already paid bookings", async () => {
+test("payment attempts reject other guests, cancelled, and already paid bookings", async () => {
   const fake = databaseDouble();
   await assert.rejects(prepareFinikPayment(BigInt(99), BigInt(20), fake.client), /notFound/);
-  for (const options of [{ demo: true }, { status: "CANCELLED" }, { status: "REJECTED" }, { paymentStatus: "PAID" }, { paymentStatus: "REFUNDED" }]) {
+  for (const options of [{ status: "CANCELLED" }, { status: "REJECTED" }, { paymentStatus: "PAID" }, { paymentStatus: "REFUNDED" }]) {
     const sample = databaseDouble(options);
     await assert.rejects(prepareFinikPayment(BigInt(10), BigInt(20), sample.client), /paymentUnavailable/);
   }
+});
+
+test("a fresh demo booking gets one 5 KGS payment, keeps guest authorization, and reuses its checkout", async () => {
+  const fake = databaseDouble({ demo: true, noPayments: true });
+  await assert.rejects(prepareFinikPayment(BigInt(99), BigInt(20), fake.client), /notFound/);
+  assert.equal(fake.payments.length, 0);
+  const first = await prepareFinikPayment(BigInt(10), BigInt(20), fake.client);
+  assert.equal(first.bookingNumber, "DEMO-TEST");
+  assert.ok(first.payment.providerPaymentId);
+  assert.ok(first.payment.amount.equals(5));
+  assert.equal(first.payment.currency, "KGS");
+  assert.equal(first.payment.paymentMethod, "FINIK_QR");
+  assert.equal(fake.payments.length, 1);
+  await assert.rejects(prepareFinikPayment(BigInt(10), BigInt(20), fake.client), /paymentProcessing/);
+  fake.payments[0].paymentUrl = "https://pay.example.test/demo";
+  assert.equal((await prepareFinikPayment(BigInt(10), BigInt(20), fake.client)).payment.paymentUrl, "https://pay.example.test/demo");
+  assert.equal(fake.payments.length, 1);
+});
+
+test("a signed demo receipt persists 5 KGS once and prevents a second charge", async () => {
+  mock.method(console, "log", () => {});
+  const fake = databaseDouble({ demo: true });
+  const keys = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const body = webhook();
+  const signed = { httpMethod: "POST", path: "/api/finik/webhook", queryStringParameters: null,
+    headers: { Host: "example.test", "x-api-timestamp": Date.now().toString() }, body };
+  const signature = await createFinikSigner(signed).sign(keys.privateKey.export({ type: "pkcs8", format: "pem" }).toString());
+  assert.ok(await createFinikSigner(signed).verify(keys.publicKey.export({ type: "spki", format: "pem" }).toString(), signature));
+  const event = parseFinikWebhook(body)!;
+  await assert.rejects(applyFinikWebhook({ ...event, userId: BigInt(99) }, fake.client), /invalidPayment/);
+  assert.deepEqual(await applyFinikWebhook(event, fake.client), { duplicate: false });
+  assert.equal(fake.payments[0].status, "PAID");
+  assert.ok(fake.payments[0].amount.equals(5));
+  assert.equal(fake.payments[0].transactionId, "transaction-1");
+  assert.equal(fake.booking.status, "PENDING");
+  assert.deepEqual(await applyFinikWebhook(event, fake.client), { duplicate: true });
+  await assert.rejects(prepareFinikPayment(BigInt(10), BigInt(20), fake.client), /paymentUnavailable/);
+  assert.equal(fake.payments.length, 1);
+  assert.equal(fake.audits.length, 1);
+});
+
+test("shared checkout creates and persists a demo payment URL once", async () => {
+  const fake = databaseDouble({ demo: true, noPayments: true });
+  const checkoutUrl = `https://qr.finik.kg/11111111-1111-4111-8111-111111111112?type=t&paymentId=${paymentId}&failure_redirect_url=https%3A%2F%2Fexample.test%2Fpayment-failed&status=failed`;
+  Object.assign(db, { $transaction: fake.client.$transaction, $queryRaw: async () => [{ attempts: 1 }], payment: fake.tx.payment });
+  mock.method(console, "info", () => {});
+  const fetch = mock.method(globalThis, "fetch", async (_url: unknown, init: RequestInit) => {
+    const body = JSON.parse(init.body as string);
+    assert.equal(body.Amount, 5);
+    assert.equal(body.Data.description, "Booking DEMO-TEST");
+    assert.equal(JSON.parse(body.Data.metadata).bookingId, "20");
+    return new Response(null, { status: 302, headers: { location: checkoutUrl } });
+  });
+  const input = { userId: BigInt(10), bookingId: BigInt(20), locale: "ru" as const, requestUrl: paymentData.requestUrl };
+  assert.equal(await startFinikPayment(input), checkoutUrl);
+  assert.equal(await startFinikPayment(input), checkoutUrl);
+  assert.equal(fake.payments[0].paymentUrl, checkoutUrl);
+  assert.equal(fake.payments[0].status, "PENDING");
+  assert.equal(fake.payments[0].transactionId, null);
+  assert.equal(fake.payments.length, 1);
+  assert.equal(fetch.mock.callCount(), 1);
+});
+
+test("shared checkout rejects missing configuration before throttling or reserving a payment", async () => {
+  delete process.env.FINIK_API_KEY;
+  const transaction = mock.fn(async () => { throw new Error("Unexpected database write"); });
+  const throttleQuery = mock.fn(async () => { throw new Error("Unexpected throttle write"); });
+  Object.assign(db, { $transaction: transaction, $queryRaw: throttleQuery });
+  await assert.rejects(startFinikPayment({
+    userId: BigInt(10), bookingId: BigInt(20), locale: "ru", requestUrl: paymentData.requestUrl,
+  }), /credentials are not configured/);
+  assert.equal(transaction.mock.callCount(), 0);
+  assert.equal(throttleQuery.mock.callCount(), 0);
 });
 
 test("existing placeholder price is replaced with 5, ready links are reused, and in-flight attempts are rejected", async () => {

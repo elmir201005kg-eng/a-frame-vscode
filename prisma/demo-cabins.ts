@@ -79,7 +79,7 @@ export const demoCabins: DemoCabin[] = [
       "Эки адамдын тынч эс алуусу үчүн жашыл бактардын арасындагы чакан үйдүн концепти. Ашкана, жайлуу уктоо аянты жана китеп окууга орун бар жыгач терраса. Чоң-Кемин үчүн көрсөтмө концепт; сүрөттөр ижарадагы үйдү көрсөтпөйт.",
       "A small home concept among greenery for a quiet getaway for two. A kitchen, a cosy sleeping area and a timber terrace with space to read. Demonstration concept for Chon-Kemin; images are not photographs of a rental property.",
     ], price: 3900, guests: 2, bedrooms: 1,
-    photos: ["story.webp", "cabin-forest.webp", "kyrgyzstan-chon-kemin.webp"],
+    photos: ["cabin-hideaway.webp", "cabin-forest.webp", "kyrgyzstan-chon-kemin.webp"],
     amenities: ["terrace", "kitchen", "parking"],
   },
   {

@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
 import { defaultLocale, isLocale, localeCookie } from "@/app/i18n/config";
-import { cookies } from "next/headers";
+import { cookies } from "@/server/context";
 import { clearGoogleFlow, finishGoogleLogin, googleErrorCode } from "@/lib/google-auth";
 
 export async function GET(request: Request) {
@@ -14,7 +13,7 @@ export async function GET(request: Request) {
     const locale = saved && isLocale(saved) ? saved : defaultLocale;
     target = new URL(`/${locale}/login?error=${encodeURIComponent(googleErrorCode(error))}`, request.url);
   }
-  const response = NextResponse.redirect(target, 303);
+  const response = new Response(null, { status: 303, headers: { Location: target.href } });
   response.headers.set("Cache-Control", "no-store");
   response.headers.set("Referrer-Policy", "no-referrer");
   return response;

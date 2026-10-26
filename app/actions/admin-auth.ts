@@ -1,8 +1,8 @@
 "use server";
 import { isAdminRole } from "@/lib/roles";
 import { randomBytes } from "node:crypto";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { redirect } from "@/server/navigation";
+import { revalidatePath } from "@/server/cache";
 import { db } from "@/lib/db";
 import { throttle } from "@/lib/auth";
 import { verifyPassword } from "@/lib/password";

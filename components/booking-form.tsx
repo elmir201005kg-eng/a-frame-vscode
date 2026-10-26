@@ -39,6 +39,9 @@ export function BookingForm({
     [values, setValues] = useState({ ...initial, ...contact }), [promoCode, setPromoCode] = useState("");
   const { quote, code, checking, reset, check } = useAvailability();
   const labels = common.labels;
+  const errorCode = code || state.code;
+  const errorMessage = errorCode === "paymentProviderUnavailable" ? labels.paymentProviderUnavailable
+    : common.errors[errorCode as keyof typeof common.errors] || common.errors.serverError;
   function update(name: string, value: string) {
     setValues((previous) => ({ ...previous, [name]: value }));
     if (["checkIn", "checkOut", "guests"].includes(name)) {
@@ -87,15 +90,14 @@ export function BookingForm({
             />
         ))}
       </fieldset>
-      {(code || state.code) && !pending && (
+      {errorCode && !pending && (
         <p className="form-message form-error" role="alert">
-          {common.errors[(code || state.code) as keyof typeof common.errors] ||
-            common.errors.serverError}
+          {errorMessage}
         </p>
       )}
       <p className={demo ? "product-notice" : "form-hint"}>{demo ? labels.demoBookingHint : labels.paymentPending}</p>
       <PendingButton className="button button-primary" type="submit" pending={pending} disabled={!quote || checking}>
-        {pending ? labels.saving : demo ? labels.demoBook : labels.book}
+        {pending ? demo ? labels.paymentCreating : labels.saving : demo ? labels.demoBook : labels.book}
       </PendingButton>
     </form>
   );

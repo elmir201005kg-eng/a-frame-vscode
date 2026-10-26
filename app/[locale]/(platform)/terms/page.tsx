@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata } from "@/server/types";
 import { pageDictionaries, translated } from "@/app/i18n/platform";
 import { InformationPage } from "@/components/information-page";
 import type { InformationDictionary } from "@/components/information-page";

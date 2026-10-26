@@ -1,9 +1,10 @@
-import { Suspense, ViewTransition } from "react";
-import Image from "next/image";
+import { Suspense } from "react";
+import Image from "@/components/image";
 import Link from "@/components/navigation-link";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { Icon } from "@/components/icon";
 import { LandingExplorer } from "@/components/landing-explorer";
+import { BookingSteps } from "@/components/landing-sections";
 import { PlatformHeader } from "@/components/platform-shell";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -13,21 +14,14 @@ import { translated } from "@/app/i18n/platform";
 import type { Locale } from "@/app/i18n/config";
 import { pwaText } from "@/lib/pwa";
 
-const stepIcons = ["compass", "calendar", "leaf"] as const;
 const heroImage = "/images/hero.webp";
-const benefitIcons = ["compass", "shield", "calendar", "heart"] as const;
 
-export async function HomeContent({ locale, offline = false }: { locale: Locale; offline?: boolean }) {
+export async function HomeContent({ locale, offline = false, embedded = false }: { locale: Locale; offline?: boolean; embedded?: boolean }) {
   const dictionary = offline ? await getLandingDictionary(locale) : await translated<LandingDictionary>(locale, "landing");
-  const { accessibility, hero, story, benefits, how, owners, faq } = dictionary;
+  const { accessibility, hero, story, how, owners, faq } = dictionary;
 
-  return (
-    <div id="top" data-offline-page={offline || undefined}>
-      <a className="skip-link" href="#main-content">{accessibility.skipToContent}</a>
-      <Suspense fallback={<LoadingSkeleton variant="header" />}>{offline ? <SiteHeader locale={locale} dictionary={dictionary} logoutError={pwaText[locale].catalog} /> : <PlatformHeader locale={locale} />}</Suspense>
-      {offline && <OfflineNotice locale={locale} />}
-      <main id="main-content">
-        <ViewTransition default="route-fade">
+  const content = (
+    <>
         <section className="hero section-shell" aria-labelledby="hero-title">
           <Image
             unoptimized={offline}
@@ -36,7 +30,7 @@ export async function HomeContent({ locale, offline = false }: { locale: Locale;
             alt={hero.imageAlt}
             fill
             quality={60}
-            sizes="(max-width: 1392px) 96vw, 1320px"
+            sizes="(max-width: 374px) calc(100vw - 32px), (max-width: 767px) calc(100vw - 40px), (max-width: 1376px) calc(100vw - 96px), (max-width: 1599px) 1280px, 1360px"
             preload
           />
           <div className="hero-shade" />
@@ -46,7 +40,7 @@ export async function HomeContent({ locale, offline = false }: { locale: Locale;
             <p className="hero-description">{hero.description}</p>
             <div className="hero-actions">
               <Link className="hero-explore" href={`/${locale}/catalog`}>{hero.action} <span><Icon name="arrow-up-right" size={21} /></span></Link>
-              <a className="hero-secondary" href="#destinations">{hero.secondaryAction}<Icon name="arrow-right" size={18} /></a>
+              <Link className="hero-secondary" href={offline ? "#destinations" : `/${locale}/destinations`}>{hero.secondaryAction}<Icon name="arrow-right" size={18} /></Link>
             </div>
           </div>
           <div className="hero-location"><Icon name="pin" size={16} /><span>{hero.location}</span></div>
@@ -75,45 +69,18 @@ export async function HomeContent({ locale, offline = false }: { locale: Locale;
               <span><Icon name="home" />{story.values.comfort}</span>
               <span><Icon name="heart" />{story.values.time}</span>
             </div>
-            <a className="text-link" href="#destinations">{story.action} <Icon name="arrow-up-right" size={20} /></a>
+            <Link className="text-link" href={offline ? "#destinations" : `/${locale}/destinations`}>{story.action} <Icon name="arrow-up-right" size={20} /></Link>
           </div>
         </section>
 
-        <section className="benefits-section section-shell" aria-labelledby="benefits-title">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">{benefits.eyebrow}</p>
-              <h2 id="benefits-title">{benefits.title}</h2>
-              <p>{benefits.description}</p>
-            </div>
-          </div>
-          <div className="benefits-grid">
-            {benefits.items.map((item, index) => (
-              <article className="benefit-card" key={item.title}>
-                <Icon name={benefitIcons[index]} size={25} />
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="how-section section-shell" id="how-it-works" aria-labelledby="how-title">
+        {offline && <section className="how-section section-shell" id="how-it-works" aria-labelledby="how-title">
           <div className="section-heading centered-heading">
             <p className="eyebrow">{how.eyebrow}</p>
             <h2 id="how-title">{how.title}</h2>
             <p>{how.description}</p>
           </div>
-          <div className="steps-grid">
-            {how.steps.map((step, index) => (
-              <article className="step" key={index}>
-                <div className="step-top"><span>{String(index + 1).padStart(2, "0")}</span><Icon name={stepIcons[index]} size={30} /></div>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+          <BookingSteps how={how} />
+        </section>}
 
         <section className="owner-section section-shell" id="owners" aria-labelledby="owner-title">
           <div className="owner-pattern" aria-hidden="true"><svg viewBox="0 0 420 320" fill="none"><path d="M40 320 210 15l170 305H40Z" /><path d="m96 320 114-204 114 204H96Z" /><path d="m152 320 58-104 58 104H152Z" /></svg></div>
@@ -139,10 +106,14 @@ export async function HomeContent({ locale, offline = false }: { locale: Locale;
             ))}
           </div>
         </section>
-        </ViewTransition>
-      </main>
-
-      <SiteFooter dictionary={dictionary} locale={locale} offline={offline} />
-    </div>
+    </>
   );
+  if (embedded) return <div className="home-page-content">{content}</div>;
+  return <div id="top" data-offline-page={offline || undefined}>
+    <a className="skip-link" href="#main-content">{accessibility.skipToContent}</a>
+    <Suspense fallback={<LoadingSkeleton variant="header" />}>{offline ? <SiteHeader locale={locale} dictionary={dictionary} logoutError={pwaText[locale].catalog} offline /> : <PlatformHeader locale={locale} />}</Suspense>
+    {offline && <OfflineNotice locale={locale} />}
+    <main id="main-content">{content}</main>
+    <SiteFooter dictionary={dictionary} locale={locale} offline={offline} />
+  </div>;
 }

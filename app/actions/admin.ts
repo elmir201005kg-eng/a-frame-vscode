@@ -1,6 +1,6 @@
 "use server";
 import { isAdminRole } from "@/lib/roles";
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "@/server/cache";
 import { requireUser, throttle } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { lockCabin } from "@/lib/booking";

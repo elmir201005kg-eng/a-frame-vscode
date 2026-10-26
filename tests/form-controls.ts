@@ -7,7 +7,9 @@ export async function chooseOption(page: Page, trigger: Locator, label: string, 
 }
 
 export async function chooseDay(page: Page, value: string) {
-  const calendar = page.locator(".premium-calendar-popover");
+  const calendar = page.locator(".premium-calendar-popover[data-state='open']");
+  await expect(calendar).toBeVisible();
+  await expect(calendar.locator("button[data-date]").first()).toBeVisible();
   for (let attempt = 0; attempt < 24; attempt++) {
     if (await calendar.locator(`button[data-date="${value}"]`).count()) {
       await calendar.locator(`button[data-date="${value}"]`).click();

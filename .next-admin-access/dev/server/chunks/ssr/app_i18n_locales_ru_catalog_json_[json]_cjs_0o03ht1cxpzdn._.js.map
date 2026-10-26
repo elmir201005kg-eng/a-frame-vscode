@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/catalog.json"],"sourcesContent":["{\"title\":\"Найдите своё место\",\"eyebrow\":\"ДОМИКИ В КЫРГЫЗСТАНЕ\",\"description\":\"Выберите направление, даты и удобства для вашего отдыха.\"}"],"names":[],"mappings":""}}]
-}

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/cabin.json"],"sourcesContent":["{\"title\":\"Түйшүктөн алыс үйүңүз\",\"eyebrow\":\"КИЙИНКИ ЭС АЛУУҢУЗ\",\"description\":\"Тынч саякат үчүн бардык маалымат.\"}"],"names":[],"mappings":""}}]
-}

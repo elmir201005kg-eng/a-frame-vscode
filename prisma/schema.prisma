@@ -4,8 +4,11 @@
 // rather than db push, to retain booking overlap and data integrity checks.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  // Fetch related rows in one database round trip; this changes only client
+  // generation, not tables, constraints or migrations.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

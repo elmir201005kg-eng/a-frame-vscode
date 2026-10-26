@@ -1,7 +1,7 @@
 "use client";
 import Link from "@/components/navigation-link";
 import { Brand } from "@/components/brand";
-import { useParams } from "next/navigation";
+import { useParams } from "@/client/router";
 import { useTransition } from "react";
 import { PendingButton } from "@/components/pending-button";
 import { isLocale } from "@/app/i18n/config";
@@ -21,7 +21,7 @@ export default function ErrorPage({
     dictionary = { ru, kg, en }[locale];
   return (
     <main className="product-error section-shell">
-      <Brand href={`/${locale}`} label={dictionary.labels.backHome} />
+      <Brand />
       <h1>{dictionary.errors.serverError}</h1>
       <div className="not-found-actions">
         <PendingButton className="button button-primary" type="button" pending={pending} onClick={() => startTransition(retry)}>

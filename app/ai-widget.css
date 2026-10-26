@@ -72,3 +72,7 @@
 /* Keep the two floating controls accessible when a PWA install offer is present. */
 body:has(.pwa-install) [data-ai-widget] { bottom: max(92px, calc(env(safe-area-inset-bottom) + 80px)); }
 body:has([data-ai-widget][data-open="true"]) .pwa-install { display: none; }
+
+/* Leave the final links scrollable above the floating assistant and install offer. */
+body:has([data-ai-widget]) .site-footer { padding-bottom: max(88px, calc(env(safe-area-inset-bottom) + 76px)); }
+body:has(.pwa-install) .site-footer { padding-bottom: max(160px, calc(env(safe-area-inset-bottom) + 148px)); }

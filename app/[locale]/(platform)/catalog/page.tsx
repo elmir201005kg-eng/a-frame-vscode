@@ -28,14 +28,14 @@ export default async function CatalogPage({
 }) {
   const locale = await routeLocale(params),
     query = await searchParams;
-  const [{ common, text }, refs, { result, error }] = await Promise.all([
+  const [{ common, text }, refs, { result, error, authenticated }] = await Promise.all([
     pageDictionaries(locale, "catalog"),
     references(locale),
     (async () => {
       const user = await getUser();
-      try { return { result: await searchCabins(query, locale, user?.id), error: "" }; }
+      try { return { result: await searchCabins(query, locale, user?.id), error: "", authenticated: Boolean(user) }; }
       catch (cause) {
-        if (cause instanceof InputError) return { result: null, error: cause.code };
+        if (cause instanceof InputError) return { result: null, error: cause.code, authenticated: Boolean(user) };
         throw cause;
       }
     })(),
@@ -69,7 +69,7 @@ export default async function CatalogPage({
     <>
       <PageHeading text={text} />
       <div className="catalog-page-layout">
-        <CatalogFilters label={common.labels.filters}>
+        <CatalogFilters label={common.labels.filters} activeCount={active.length}>
           <NavigationForm action={`/${locale}/catalog`} className="product-form" key={JSON.stringify(query)}>
             <Field
               label={common.labels.q}
@@ -156,6 +156,7 @@ export default async function CatalogPage({
                       cabin={cabin}
                       locale={locale}
                       common={common}
+                      authenticated={authenticated}
                       eager={index < 2}
                       stay={{
                         checkIn: single(query, "checkIn"),

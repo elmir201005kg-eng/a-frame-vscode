@@ -1,7 +1,6 @@
-import type { MetadataRoute } from "next";
 import { pwaThemeColor } from "@/lib/pwa";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default function manifest() {
   return {
     id: "/",
     name: "A-FRAME KG",

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/login.json"],"sourcesContent":["{\"title\":\"Рады вашему возвращению\",\"eyebrow\":\"A-FRAME KG\",\"description\":\"Войдите, чтобы продолжить планировать отдых.\"}"],"names":[],"mappings":""}}]
-}

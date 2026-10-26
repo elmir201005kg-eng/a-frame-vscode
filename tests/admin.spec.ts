@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { chooseOption, chooseDay } from "./form-controls";
 import { adminPeriod } from "../lib/admin-period";
+import { addDays, bishkekToday } from "../lib/stay-dates";
 
 test.skip(!process.env.QA_SCHEMA, "Run npm run test:performance to use a newly created, isolated test schema.");
 test.use({ screenshot: "only-on-failure" });
@@ -53,7 +54,10 @@ test("ADMIN sees exact database aggregates, revenue exclusions, search, filters 
   await expect(page.locator('[data-stat="revenue"]')).toContainText("4");
   const revenueText = (await page.locator('[data-stat="revenue"]').innerText()).replace(/[^\d]/g, "");
   expect(revenueText).toBe("4000");
-  await expect(page.locator('[data-stat="paid"]')).toHaveText("1");
+  await expect(page.locator(".admin-stat-card")).toHaveCount(4);
+  await expect(page.locator('[data-stat="pending"]')).toBeVisible();
+  await expect(page.locator('[data-stat="moderation"]')).toBeVisible();
+  await expect(page.locator(".admin-chart-row, .admin-secondary-stats, .admin-recent-events")).toHaveCount(0);
   await expect(page.locator(".admin-bookings-table tbody tr")).toHaveCount(6);
   await page.locator(".admin-table-footer").getByRole("link", { name: "Далее", exact: true }).click();
   await expect(page.locator(".admin-bookings-table tbody tr")).toHaveCount(2);
@@ -78,6 +82,10 @@ test("ADMIN sees exact database aggregates, revenue exclusions, search, filters 
   const body = await result.text();
   expect(body).not.toContain(privateMarker);
   expect(body).not.toMatch(/passwordHash|password_hash|guestPhone|guestEmail/);
+  await page.goto("/ru/admin/analytics");
+  await expect(page.locator('[data-stat="paid"]')).toHaveText("1");
+  await expect(page.locator(".admin-chart-row")).toBeVisible();
+  await expect(page.locator(".admin-bookings-panel")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -117,7 +125,7 @@ test("admin moderation persists an audit; USER, OWNER and cross-origin action re
   const record = page.locator(".admin-record").first();
   await record.locator("summary").click();
   await chooseOption(page, record.getByRole("combobox"), "Published");
-  const submitted = page.waitForRequest(request => request.method() === "POST" && !!request.headers()["next-action"]);
+  const submitted = page.waitForRequest(request => request.method() === "POST" && !!request.headers()["x-server-action"]);
   await record.locator("button[type='submit']").click();
   await page.locator("dialog[open]").getByRole("button", { name: "Confirm", exact: true }).click();
   const request = await submitted;
@@ -128,12 +136,14 @@ test("admin moderation persists an audit; USER, OWNER and cross-origin action re
   for (const userId of [guest, process.env.QA_OWNER_ID!]) {
     const other = await browser.newContext();
     await session(other, userId);
-    const headers = { ...request.headers() }; delete headers.cookie;
+    const headers: Record<string, string> = { ...await request.allHeaders(), origin: base }; delete headers.cookie;
     const denied = await other.request.post(request.url(), { headers, data: request.postDataBuffer()!, maxRedirects: 0 });
-    expect(await denied.text()).toContain("forbidden");
+    const redirect = denied.headers()["x-redirect"];
+    if (redirect) expect(redirect).toMatch(/^\/en\/(account|owner)$/);
+    else expect(await denied.text()).toContain("forbidden");
     await other.close();
   }
-  const forged = await context.request.post(request.url(), { headers: { ...request.headers(), origin: "https://attacker.invalid" }, data: request.postDataBuffer()!, maxRedirects: 0 });
+  const forged = await context.request.post(request.url(), { headers: { ...await request.allHeaders(), origin: "https://attacker.invalid" }, data: request.postDataBuffer()!, maxRedirects: 0 });
   expect(forged.status()).toBeGreaterThanOrEqual(400);
   expect((await pool.query("SELECT count(*)::int AS count FROM audit_logs WHERE entity_type='cabin' AND entity_id=$1", [cabin])).rows[0].count).toBe(1);
   // Keep the public catalog fixture count used by the existing regression suite.
@@ -147,11 +157,29 @@ test("all existing admin sections and locale switches work; mobile drawer, keybo
   test.setTimeout(300000);
   const errors = monitor(page);
   await session(context, process.env.QA_ADMIN_ID!);
-  for (const section of ["cabins", "bookings", "payments", "users", "owners", "regions", "reviews", "activities", "notifications", "translations", "settings", "amenities", "categories", "calendar", "promotions", "messages", "audit", "analytics"]) {
+  const sections = [
+    ["cabins", "cabins"], ["bookings", "bookings"], ["payments", "payments"],
+    ["users", "users"], ["owners", "owners"], ["regions", "cabins"],
+    ["reviews", "cabins"], ["activities", "settings"], ["notifications", "settings"],
+    ["translations", "settings"], ["settings", "settings"], ["amenities", "cabins"],
+    ["categories", "cabins"], ["calendar", "bookings"], ["promotions", "cabins"],
+    ["messages", "users"], ["support", "users"], ["audit", "settings"], ["analytics", "dashboard"],
+  ];
+  for (const [section, parent] of sections) {
     await page.goto(`/ru/admin/${section}`);
-    await expect(page.locator(".admin-sidebar a[aria-current='page']")).toHaveAttribute("href", `/ru/admin/${section}`);
+    await expect(page.locator(".admin-sidebar .admin-nav > a")).toHaveCount(7);
+    await expect(page.locator(".admin-sidebar a[aria-current='page']")).toHaveAttribute("href", `/ru/admin${parent === "dashboard" ? "" : `/${parent}`}`);
     await expect(page.locator(".admin-section-heading, .admin-page-heading").first()).toBeVisible();
+    const canonical = section === "activities" ? "audit" : section === "support" ? "messages" : section;
+    await expect(page).toHaveURL(new RegExp(`/ru/admin/${canonical}$`));
+    if (!["payments", "owners", "notifications"].includes(section)) {
+      await expect(page.locator(".admin-section-navigation a[aria-current='page']")).toHaveAttribute("href", `/ru/admin/${canonical}`);
+    }
   }
+  await page.goto("/ru/admin/support?q=a%26b&tag=one&tag=two");
+  await expect(page).toHaveURL(/\/ru\/admin\/messages\?q=a%26b&tag=one&tag=two$/);
+  await page.goto("/ru/admin/activities?scope=admins&q=test");
+  await expect(page).toHaveURL(/\/ru\/admin\/audit\?scope=admins&q=test$/);
   for (const locale of ["ru", "kg", "en"] as const) {
     await page.goto(`/${locale}/admin`);
     for (const width of [320, 375, 430, 768, 1024, 1440]) {
@@ -161,6 +189,7 @@ test("all existing admin sections and locale switches work; mobile drawer, keybo
       if (width < 1024) {
         await page.locator(".admin-mobile-menu").click();
         await expect(page.locator("dialog.admin-drawer")).toBeVisible();
+        await expect(page.locator("dialog.admin-drawer .admin-nav > a")).toHaveCount(7);
         await page.keyboard.press("Escape");
         await expect(page.locator("dialog.admin-drawer")).not.toBeVisible();
       }
@@ -203,6 +232,66 @@ test("custom date controls submit real historical ranges and preserve empty stat
   await page.goto("/en/admin?period=custom&from=2000-01-01&to=2000-01-01");
   await expect(page.locator('[data-stat="bookings"]')).toHaveText("0");
   await expect(page.locator('[data-stat="revenue"]')).toContainText("0");
-  await expect(page.locator(".admin-chart-empty")).toBeVisible();
   await expect(page.locator(".admin-table-empty")).toBeVisible();
+  await page.goto("/en/admin/analytics?period=custom&from=2000-01-01&to=2000-01-01");
+  await expect(page.locator(".admin-chart-empty")).toBeVisible();
+  await expect(page.locator(".admin-bookings-panel")).toHaveCount(0);
+});
+
+test("booking filters allow historical dates and preserve submitted values", async ({ page, context }) => {
+  await session(context, process.env.QA_ADMIN_ID!);
+  const yesterday = addDays(bishkekToday(), -1);
+  await page.goto("/en/admin/bookings");
+  const form = page.locator(".admin-filters");
+  for (const name of ["from", "to"]) {
+    await form.locator(`.product-field:has(input[name='${name}']) .premium-date-trigger`).click();
+    await chooseDay(page, yesterday);
+    await expect(form.locator(`input[name='${name}']`)).toHaveValue(yesterday);
+  }
+  await form.locator("button[type='submit']").click();
+  await expect(page).toHaveURL(new RegExp(`from=${yesterday}&to=${yesterday}`));
+  await expect(page.locator(".admin-table-empty")).toBeVisible();
+});
+
+test("super administrator can enter administration from the public account menu", async ({ page, context }) => {
+  const superAdmin = (await pool.query("INSERT INTO users(first_name,email,role,updated_at) VALUES('QA Super Admin',$1,'SUPER_ADMIN',NOW()) RETURNING id", [`${prefix}-super@qa.invalid`])).rows[0].id;
+  await session(context, superAdmin);
+  await page.goto("/en/catalog");
+  await page.locator(".header-account-button").click();
+  const account = page.locator(".header-account-name");
+  await expect(account).toHaveAttribute("href", "/en/admin");
+  await account.click();
+  await expect(page.locator(".admin-shell")).toBeVisible();
+});
+
+test("admin cleanup: local Kyrgyz home, profile and anonymous access stay reachable", async ({ page, context, browser }) => {
+  test.skip(process.env.E2E_PRODUCTION === "true", "This regression covers local paths without the Kyrgyz prefix.");
+  test.setTimeout(180000);
+  await session(context, process.env.QA_ADMIN_ID!);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/kg/admin/cabins");
+  await expect(page).toHaveURL(/\/admin\/cabins$/);
+  await expect(page.locator(".admin-sidebar .admin-nav a[aria-current='page']")).toHaveAttribute("href", "/admin/cabins");
+  await page.locator(".admin-sidebar .admin-nav > a").first().click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.locator(".admin-overview")).toBeVisible();
+  const applyPeriod = page.locator(".admin-period-form button[type='submit']");
+  await applyPeriod.click();
+  await expect(page).toHaveURL(/\/admin\?period=30$/, { timeout: 60000 });
+  await expect(applyPeriod).toBeEnabled({ timeout: 60000 });
+  await page.locator(".admin-profile-trigger").click();
+  const profile = page.locator(".admin-profile-popover a[href='/admin/settings?profile=1#profile']");
+  await expect(profile).toBeVisible();
+  await profile.click();
+  await expect(page).toHaveURL(/\/admin\/settings\?profile=1#profile$/, { timeout: 60000 });
+  await expect(page.locator("input[name='firstName']")).toBeVisible({ timeout: 60000 });
+
+  const anonymous = await browser.newContext();
+  try {
+    await anonymous.addCookies([{ name: "a-frame-kg-locale", value: "kg", url: base }]);
+    const guestPage = await anonymous.newPage();
+    await guestPage.goto("/admin");
+    await expect(guestPage).toHaveURL(/\/admin-login/);
+    await expect(guestPage.locator(".admin-shell")).toHaveCount(0);
+  } finally { await anonymous.close(); }
 });

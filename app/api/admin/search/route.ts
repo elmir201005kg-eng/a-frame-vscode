@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     ]);
     return Response.json({ results: [
       ...cabins.map(row => ({ id: `c-${row.id}`, type: "cabins", title: (locale === "kg" ? row.titleKg : locale === "en" ? row.titleEn : null) || row.title, href: `/${locale}/admin/cabins?q=${encodeURIComponent(row.title)}` })),
-      ...bookings.map(row => ({ id: `b-${row.id}`, type: "bookings", title: row.bookingNumber, href: `/${locale}/bookings/${row.id}` })),
+      ...bookings.map(row => ({ id: `b-${row.id}`, type: "bookings", title: row.bookingNumber, href: `/${locale}/admin/bookings?q=${encodeURIComponent(row.bookingNumber)}` })),
       ...users.map(row => ({ id: `u-${row.id}`, type: "users", title: [row.firstName, row.lastName].filter(Boolean).join(" "), href: `/${locale}/admin/users?q=${encodeURIComponent(row.firstName)}` })),
     ] }, { headers });
   } catch (error) {

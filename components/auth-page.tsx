@@ -1,6 +1,6 @@
 import Link from "@/components/navigation-link";
-import Image from "next/image";
-import { redirect } from "next/navigation";
+import Image from "@/components/image";
+import { redirect } from "@/server/navigation";
 import { Brand } from "@/components/brand";
 import { AuthForm } from "@/components/auth-form";
 import { Icon } from "@/components/icon";
@@ -17,6 +17,10 @@ export async function AuthenticationPage({ params, searchParams, mode }: AuthPag
   const locale = await routeLocale(params), query = await searchParams;
   const requestedNext = single(query, "next");
   const next = requestedNext ? safeNext(requestedNext, locale) : "";
+  const nextPath = next.split(/[?#]/, 1)[0];
+  if (nextPath === `/${locale}/admin` || nextPath.startsWith(`/${locale}/admin/`)) {
+    redirect(`/admin?locale=${locale}`);
+  }
   if (await getUser()) redirect(next || `/${locale}/account`);
   const { common, text } = await pageDictionaries(locale, mode);
   const role = single(query, "role") === "OWNER" || next.includes("/owner") ? "OWNER" : "USER";
@@ -29,7 +33,7 @@ export async function AuthenticationPage({ params, searchParams, mode }: AuthPag
       <div className="auth-photo traveler-auth-photo">
         <Image src="/images/kyrgyzstan-karakol.webp" alt="" fill sizes="(max-width:767px) 0px, 45vw" loading="eager" />
         <div className="traveler-auth-caption">
-          <Brand inverse href={`/${locale}`} label={common.nav.home} />
+          <Brand inverse />
           <p>{common.auth.photoTitle}</p>
           <span>{common.auth.photoDescription}</span>
         </div>

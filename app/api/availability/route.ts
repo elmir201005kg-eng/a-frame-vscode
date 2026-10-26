@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { quoteStay } from "@/lib/booking";
 import { id, InputError } from "@/lib/validation";
 
@@ -13,7 +12,7 @@ export async function GET(request: Request) {
       undefined,
       params.get("promoCode") || "",
     );
-    return NextResponse.json(
+    return Response.json(
       {
         available: true,
         nights: quote.range.nights,
@@ -23,7 +22,7 @@ export async function GET(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    return NextResponse.json(
+    return Response.json(
       { code: error instanceof InputError ? error.code : "serverError" },
       { status: error instanceof InputError ? 400 : 503, headers: { "Cache-Control": "no-store" } },
     );

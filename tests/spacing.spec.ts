@@ -13,7 +13,7 @@ if (!schema || !/^aframe_qa_[a-f0-9]{12}$/.test(schema) || schema !== process.en
 const pool = new Pool({ connectionString: connection.toString(), options: `-c search_path=${schema}`, connectionTimeoutMillis: 10000, statement_timeout: 15000 });
 const phase = process.env.SPACING_QA_PHASE === "before" ? "before" : "after";
 const widths = (process.env.SPACING_QA_WIDTHS || "320,375,390,430,768,1024,1440").split(",").map(Number);
-const root = `.next/spacing-qa/${phase}`;
+const root = `test-results-spacing/${phase}`;
 let traveler: string, cabinId: string, bookingId: string;
 
 test.beforeAll(async () => {

@@ -15,6 +15,13 @@ function subscribeToday(notify: () => void) {
   return () => clearInterval(timer);
 }
 const serverToday = () => "";
+const subscribeHydration = () => () => {};
+const clientHydrated = () => true;
+const serverHydrated = () => false;
+
+export function useHydrated() {
+  return useSyncExternalStore(subscribeHydration, clientHydrated, serverHydrated);
+}
 
 export function FormDesignProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
   return <FormLocale.Provider value={locale}>{children}</FormLocale.Provider>;

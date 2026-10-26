@@ -1,39 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# A-FRAME KG
 
-## Getting Started
+Сервис поиска и бронирования A-frame домиков в Кыргызстане на React 19, Vite и PostgreSQL / Prisma. Интерфейс доступен на русском, кыргызском и английском; используется локальный шрифт Manrope. Next.js удалён из зависимостей и запуска.
 
-First, run the development server:
+## Локальный запуск
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Установите зависимости через `npm ci`, создайте `.env` по `.env.example` и настройте PostgreSQL. После применения миграций выполните `npm run db:generate` и `npm run dev`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Сайт доступен по адресу [http://localhost:3001](http://localhost:3001). В режиме разработки кыргызская версия использует адреса без `/kg`; русская и английская — `/ru` и `/en`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Демонстрационные домики видны при разработке. Для явного управления используйте `DEMO_MODE=true` или `DEMO_MODE=false`; в production без этой настройки демонстрационные объекты скрыты.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Структура и проверки
 
-## Learn More
+- `app/[locale]` — главная, каталог, фотогалерея, направления, бронирование, кабинеты и административные страницы.
+- `app/actions` и `app/api` — серверные действия, авторизация, доступность, оплата и загрузка фотографий.
+- `components` — интерфейс; `lib` — прикладная логика и интеграции.
+- `client` — запуск React в браузере и переходы между страницами; `server` — HTTP-сервер, маршруты, cookie-сессии и серверный рендеринг React.
+- `vite.config.ts` — сборка; `dist` — единая папка результата. Серверные компоненты и действия React обрабатывает `@vitejs/plugin-rsc`; его API пока экспериментальный, поэтому версии закреплены в lock-файле.
+- `app/i18n/locales` — переводы; `prisma` — схема, миграции и начальные данные; `tests` — автоматические проверки.
 
-To learn more about Next.js, take a look at the following resources:
+Основные команды: `npm run lint`, `npx tsc --noEmit`, `npm run test:finik`, `npm run test:ai`, `npm run build`. Проверки авторизации и административных сценариев используют отдельную тестовую БД; настройки описаны в соответствующих документах и QA-скриптах.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Production: `npm run build`, затем `npm start` (порт 3001; другой порт: `npm start -- --port 4000`). Нужен Node.js 22.12+ или 24. Старые каталоги `.next` и `.next-*` больше не используются; их можно очистить командой `npm run clean:legacy` после остановки старого сервера Next.js. Исходники и база данных этой командой не затрагиваются.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Результаты анализа и очистки: [docs/project-audit.md](docs/project-audit.md).
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Архитектура после удаления Next.js: [docs/react-migration.md](docs/react-migration.md).
 
 ## База данных
 

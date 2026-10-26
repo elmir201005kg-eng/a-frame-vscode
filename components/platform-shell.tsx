@@ -1,7 +1,10 @@
-import { Suspense, ViewTransition, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { PlatformMain } from "@/components/platform-main";
+import { AiConsultant } from "@/components/ai-consultant";
+import { aiText } from "@/app/i18n/ai";
 import type { Locale } from "@/app/i18n/config";
 
 import type { LandingDictionary } from "@/app/i18n/dictionaries";
@@ -34,10 +37,11 @@ export async function PlatformShell({ locale, children }: { locale: Locale; chil
         {dictionary.accessibility.skipToContent}
       </a>
       <Suspense fallback={<LoadingSkeleton variant="header" />}><PlatformHeader locale={locale} /></Suspense>
-      <main id="main-content" className="product-main section-shell">
-        <ViewTransition default="route-fade">{children}</ViewTransition>
-      </main>
+      <PlatformMain>
+        {children}
+      </PlatformMain>
       <SiteFooter locale={locale} dictionary={dictionary} />
+      <Suspense fallback={null}><AiConsultant locale={locale} labels={{ open: aiText[locale].open, close: aiText[locale].close }} /></Suspense>
     </div>
   );
 }

@@ -1,11 +1,14 @@
 "use server";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { redirect, redirectExternal } from "@/server/navigation";
+import { revalidatePath } from "@/server/cache";
+import { headers } from "@/server/context";
 import { db } from "@/lib/db";
 import { publicCabinWhere } from "@/lib/catalog";
 import { requireUser } from "@/lib/auth";
 import { cancelBooking, createBooking } from "@/lib/booking";
 import { notifyAdministrators } from "@/lib/admin-events";
+import { finikConfiguration, finikRequestUrl } from "@/lib/finik";
+import { startFinikPayment } from "@/lib/finik-payments";
 import type { ActionState } from "./auth";
 import {
   InputError,
@@ -21,6 +24,57 @@ import {
 const errorState = (error: unknown): ActionState => ({
   code: error instanceof InputError ? error.code : "serverError",
 });
+
+async function checkoutRequestUrl() {
+  const incoming = await headers();
+  let requestUrl: string | null = null;
+  try {
+    requestUrl = finikRequestUrl(new Request(new URL("/api/finik/create-payment", incoming.get("origin") || ""), { headers: incoming }));
+  } catch { /* Invalid origins are rejected below. */ }
+  if (!requestUrl) fail("forbidden");
+  // Check before saving a demo request so missing configuration does not reserve dates.
+  try { finikConfiguration(requestUrl); }
+  catch { fail("paymentProviderUnavailable"); }
+  return requestUrl;
+}
+
+export async function demoBookingAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const locale = localeFrom(form);
+  const stayQuery = new URLSearchParams();
+  for (const key of ["checkIn", "checkOut", "guests"])
+    stayQuery.set(key, String(form.get(key) || ""));
+  const user = await requireUser(locale, `/${locale}/cabins/${encodeURIComponent(String(form.get("slug") || ""))}?${stayQuery}`);
+  let destination: string;
+  let savedBookingId: bigint | null = null;
+  try {
+    const cabinId = id(form.get("cabinId"));
+    const requestKey = text(form, "requestKey", 36, 36);
+    if (!/^[a-f0-9-]{36}$/.test(requestKey)) fail("invalidFields");
+    const cabin = await db.cabin.findFirst({ where: publicCabinWhere({ id: cabinId, isDemo: true }), select: { id: true } });
+    if (!cabin) fail("cabinUnavailable");
+    const requestUrl = await checkoutRequestUrl();
+    const booking = await createBooking({
+      userId: user.id,
+      cabinId,
+      checkIn: text(form, "checkIn", 10, 10),
+      checkOut: text(form, "checkOut", 10, 10),
+      guests: numberField(form, "guests", 1, 50),
+      guestName: [user.firstName, user.lastName].filter(Boolean).join(" "),
+      guestPhone: user.phone || "",
+      guestEmail: user.email,
+      requestKey,
+    });
+    savedBookingId = booking.id;
+    destination = await startFinikPayment({ userId: user.id, bookingId: booking.id, locale, requestUrl });
+  } catch (error) {
+    if (savedBookingId === null) return errorState(error);
+    destination = `/${locale}/bookings/${savedBookingId}?payment=failed`;
+  }
+  revalidatePath(`/${locale}`, "layout");
+  if (destination.startsWith("https://")) redirectExternal(destination);
+  redirect(destination);
+}
+
 export async function favoriteAction(_: ActionState, form: FormData): Promise<ActionState> {
   const locale = localeFrom(form),
     user = await requireUser(
@@ -51,13 +105,18 @@ export async function favoriteAction(_: ActionState, form: FormData): Promise<Ac
 export async function bookingAction(_: ActionState, form: FormData): Promise<ActionState> {
   const locale = localeFrom(form),
     user = await requireUser(locale, `/${locale}/booking`);
-  let bookingId: string;
+  let destination: string;
+  let savedBookingId: bigint | null = null;
   try {
     const requestKey = text(form, "requestKey", 36, 36);
     if (!/^[a-f0-9-]{36}$/.test(requestKey)) fail("invalidFields");
+    const cabinId = id(form.get("cabinId"));
+    const cabin = await db.cabin.findFirst({ where: publicCabinWhere({ id: cabinId }), select: { isDemo: true } });
+    if (!cabin) fail("cabinUnavailable");
+    const requestUrl = cabin.isDemo ? await checkoutRequestUrl() : null;
     const booking = await createBooking({
       userId: user.id,
-      cabinId: id(form.get("cabinId")),
+      cabinId,
       checkIn: text(form, "checkIn", 10, 10),
       checkOut: text(form, "checkOut", 10, 10),
       guests: numberField(form, "guests", 1, 50),
@@ -67,12 +126,18 @@ export async function bookingAction(_: ActionState, form: FormData): Promise<Act
       requestKey,
       promoCode: typeof form.get("promoCode") === "string" ? text(form, "promoCode", 0, 40) : "",
     });
-    bookingId = booking.id.toString();
+    destination = `/${locale}/bookings/${booking.id}`;
+    if (requestUrl) {
+      savedBookingId = booking.id;
+      destination = await startFinikPayment({ userId: user.id, bookingId: booking.id, locale, requestUrl });
+    }
   } catch (error) {
-    return errorState(error);
+    if (savedBookingId === null) return errorState(error);
+    destination = `/${locale}/bookings/${savedBookingId}?payment=failed`;
   }
   revalidatePath(`/${locale}`, "layout");
-  redirect(`/${locale}/bookings/${bookingId}`);
+  if (destination.startsWith("https://")) redirectExternal(destination);
+  redirect(destination);
 }
 export async function cancellationAction(_: ActionState, form: FormData): Promise<ActionState> {
   const locale = localeFrom(form),

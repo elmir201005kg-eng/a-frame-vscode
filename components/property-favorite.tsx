@@ -1,6 +1,7 @@
 "use client";
 import { useSafeAction } from "@/components/use-safe-action";
 import { PendingButton } from "@/components/pending-button";
+import Link from "@/components/navigation-link";
 import { favoriteAction } from "@/app/actions/traveler";
 import { Icon } from "@/components/icon";
 import type { CommonDictionary } from "@/app/i18n/platform";
@@ -12,14 +13,26 @@ export function PropertyFavorite({
   locale,
   common,
   next,
+  authenticated = true,
 }: {
   cabinId: string;
   active: boolean;
   locale: Locale;
   common: CommonDictionary;
   next: string;
+  authenticated?: boolean;
 }) {
   const [state, action, pending] = useSafeAction(favoriteAction, {});
+  if (!authenticated) {
+    return <span className="property-favorite"><Link
+      className={`favorite-button${active ? " is-favorite" : ""}`}
+      href={`/${locale}/login?next=${encodeURIComponent(next)}`}
+      aria-pressed={active}
+      aria-label={active ? common.labels.removeFavorite : common.labels.addFavorite}
+    >
+      <Icon name="heart" size={19} />
+    </Link></span>;
+  }
   return (
     <form action={action} className="property-favorite" aria-busy={pending}>
       <input name="cabinId" value={cabinId} type="hidden" />

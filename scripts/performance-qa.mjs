@@ -8,14 +8,12 @@ import { resolve } from "node:path";
 
 dotenv.config({ quiet: true });
 const port = Number(process.env.E2E_PORT || 3107);
-const productionDir = process.env.E2E_PRODUCTION_DIR || ".next-e2e-production";
+const productionDir = process.env.E2E_PRODUCTION_DIR || "dist";
 // A new schema keeps every write, account and booking separate from site data.
-const schema = `aframe_qa_${randomBytes(6).toString("hex")}`;
 const connection = new URL(process.env.E2E_DATABASE_URL || process.env.DATABASE_URL);
 if (connection.hostname.endsWith(".neon.tech")) connection.hostname = connection.hostname.replace("-pooler.", ".");
 if (["require", "verify-ca", "prefer"].includes(connection.searchParams.get("sslmode"))) connection.searchParams.set("sslmode", "verify-full");
 const pool = new Pool({ connectionString: connection.toString(), connectionTimeoutMillis: 10000 });
-let created = false;
 
 function run(args, env) {
   return new Promise((resolve, reject) => {
@@ -25,7 +23,7 @@ function run(args, env) {
   });
 }
 
-async function fixtures() {
+async function fixtures(schema) {
   const client = await pool.connect();
   try {
     if (!(await client.query("SELECT 1 FROM pg_extension WHERE extname='btree_gist'")).rowCount) throw new Error("The migrated test database needs btree_gist.");
@@ -55,7 +53,6 @@ async function fixtures() {
       await client.query("INSERT INTO cabin_amenities(cabin_id,amenity_id) VALUES($1,$2)", [cabin, amenity]);
     }
     await client.query("COMMIT");
-    created = true;
     return { owner, admin };
   } catch (error) {
     await client.query("ROLLBACK");
@@ -63,31 +60,49 @@ async function fixtures() {
   } finally { client.release(); }
 }
 
-try {
-  const ids = await fixtures();
-  connection.searchParams.set("schema", schema);
-  const env = { ...process.env, DATABASE_URL: connection.toString(), E2E_DATABASE_URL: connection.toString(),
-    QA_SCHEMA: schema, QA_ADMIN_ID: ids.admin, QA_OWNER_ID: ids.owner, DEMO_MODE: "false", APP_URL: `http://localhost:${port}`,
+const production = process.env.QA_MODE !== "development";
+let built = process.env.QA_REUSE_BUILD === "true";
+const files = process.env.QA_FILES ? process.env.QA_FILES.split(",")
+  : process.env.QA_SUITE === "forms" ? ["auth.spec.ts", "responsiveness.spec.ts", "premium-forms.spec.ts"]
+    : process.env.QA_SUITE === "admin" ? ["admin-navigation.spec.ts", "admin-period.spec.ts", "admin.spec.ts", "admin-workspace.spec.ts"]
+      : readdirSync("tests").filter(name => name.endsWith(".spec.ts") && name !== "demo-checkout.spec.ts").sort();
+if (files.some(name => !/^[a-z0-9-]+\.spec\.ts$/.test(name))) throw new Error("QA_FILES must contain test filenames separated by commas.");
+
+// Each spec owns fresh fixtures and a fresh server. Exact aggregate assertions
+// must not see bookings, translations or cabins created by another spec.
+for (const file of files) {
+  const schema = `aframe_qa_${randomBytes(6).toString("hex")}`;
+  let created = false;
+  try {
+  const ids = await fixtures(schema);
+  created = true;
+  const scopedConnection = new URL(connection);
+  scopedConnection.searchParams.set("schema", schema);
+  const env = { ...process.env, DATABASE_URL: scopedConnection.toString(), E2E_DATABASE_URL: scopedConnection.toString(),
+    E2E_PORT: String(port), QA_SCHEMA: schema, QA_ADMIN_ID: ids.admin, QA_OWNER_ID: ids.owner, DEMO_MODE: "false", APP_URL: `http://localhost:${port}`,
     TELEGRAM_BOT_TOKEN: "", TELEGRAMM_KEY: "", TELEGRAM_ADMIN_CHAT_ID: "", ADMIN_OTP_SECRET: randomBytes(32).toString("hex"),
-    GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", GOOGLE_CLIENT_SECRET_ID: "",
+    GOOGLE_CLIENT_ID: process.env.QA_GREP === "Google OAuth" ? "qa-client.apps.googleusercontent.com" : "", GOOGLE_CLIENT_SECRET: process.env.QA_GREP === "Google OAuth" ? "qa-protocol-only" : "", GOOGLE_CLIENT_SECRET_ID: "",
     FINIK_API_KEY: "", FINIK_ACCOUNT_ID: "", FINIK_PRIVATE_KEY: "", FINIK_ENV: "beta",
-    UPLOAD_DIR: resolve("test-results-admin", schema, "uploads") };
-  const production = process.env.QA_MODE !== "development";
-  if (production && process.env.QA_REUSE_BUILD !== "true")
-    await run(["node_modules/next/dist/bin/next", "build"], { ...env, NEXT_DIST_DIR: productionDir });
-  const files = process.env.QA_SUITE === "forms" ? ["tests/auth.spec.ts", "tests/responsiveness.spec.ts", "tests/premium-forms.spec.ts"]
-    : process.env.QA_SUITE === "admin" ? ["tests/admin-period.spec.ts", "tests/admin.spec.ts", "tests/admin-workspace.spec.ts"] : [];
+    UPLOAD_DIR: resolve("test-results-admin", schema, "uploads"),
+    E2E_OUTPUT_DIR: resolve(process.env.E2E_OUTPUT_DIR || "test-results-performance", file.replace(".spec.ts", "")),
+    PLAYWRIGHT_JSON_OUTPUT_NAME: resolve(process.env.E2E_OUTPUT_DIR || "test-results-performance", `${file}.json`) };
+  if (production && !built) {
+    await run(["node_modules/vite/bin/vite.js", "build", "--configLoader", "runner"], { ...env, BUILD_DIR: productionDir });
+    await run(["scripts/build-pwa.mjs"], { ...env, BUILD_DIR: productionDir });
+    built = true;
+  }
   const filter = process.env.QA_GREP ? ["--grep", process.env.QA_GREP] : ["--grep-invert", "Google OAuth"];
-  await run(["node_modules/@playwright/test/cli.js", "test", ...files, ...filter], { ...env, E2E_PRODUCTION: String(production) });
-  if (process.env.QA_SUITE !== "admin" && !process.env.QA_GREP)
+  await run(["node_modules/@playwright/test/cli.js", "test", `tests/${file}`, ...filter, "--reporter=list,json"], { ...env, E2E_PRODUCTION: String(production) });
+  if (file === "auth.spec.ts" && !process.env.QA_GREP)
     await run(["node_modules/@playwright/test/cli.js", "test", "tests/auth.spec.ts", "--grep", "Google OAuth"], {
       ...env, E2E_PRODUCTION: "false", GOOGLE_CLIENT_ID: "qa-client.apps.googleusercontent.com", GOOGLE_CLIENT_SECRET: "qa-protocol-only",
     });
-} catch (error) {
+  } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
-} finally {
+  } finally {
   // Only this invocation's randomly generated schema is eligible for cleanup.
   if (created && /^aframe_qa_[a-f0-9]{12}$/.test(schema)) await pool.query(`DROP SCHEMA "${schema}" CASCADE`);
-  await pool.end();
+  }
 }
+await pool.end();

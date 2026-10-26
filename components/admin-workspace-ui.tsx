@@ -12,17 +12,19 @@ import type { requireAdmin } from "@/lib/auth";
 
 export type AdminContext = { locale: Locale; common: CommonDictionary; text: AdminDictionary; query: AdminQuery; user: Awaited<ReturnType<typeof requireAdmin>> };
 export const hidden = (name: string, value: string | number | bigint) => <input type="hidden" name={name} value={String(value)} />;
-export function AdminPageHeading({ ctx, section, children }: { ctx: AdminContext; section: keyof CommonDictionary["nav"]; children?: ReactNode }) {
-  return <div className="admin-page-heading admin-section-heading"><div><p className="admin-eyebrow">A-FRAME KG · {ctx.text.manage.workspace}</p><h1>{ctx.common.nav[section]}</h1><p>{ctx.text.manage.manageDescription}</p></div>{children || <span className="admin-live-label"><Database size={12} />{ctx.text.dashboard.live}</span>}</div>;
+export function AdminPageHeading({ ctx, section, children }: { ctx: AdminContext; section: keyof CommonDictionary["nav"] | "support"; children?: ReactNode }) {
+  const title = section === "support" ? ctx.text.shell.support : ctx.common.nav[section];
+  return <div className="admin-page-heading admin-section-heading"><div><p className="admin-eyebrow">A-FRAME KG · {ctx.text.manage.workspace}</p><h1>{title}</h1><p>{ctx.text.manage.manageDescription}</p></div>{children || <span className="admin-live-label"><Database size={12} />{ctx.text.dashboard.live}</span>}</div>;
 }
 export function AdminFilters({ ctx, section, statuses = [], dates = false, children }: { ctx: AdminContext; section: string; statuses?: string[]; dates?: boolean; children?: ReactNode }) {
   const { text: { manage: t }, common, query, locale } = ctx;
   return <>
     <NavigationForm action={`/${locale}/admin/${section}`} className="admin-filters">
       {section === "bookings" && /^[1-9]\d{0,17}$/.test(queryString(query, "userId")) && hidden("userId", queryString(query, "userId"))}
+      {section === "bookings" && /^[1-9]\d{0,17}$/.test(queryString(query, "bookingId")) && hidden("bookingId", queryString(query, "bookingId"))}
       <div className="admin-filter-search"><Search size={17} /><Field label={t.search} name="q" type="search" maxLength={150} defaultValue={queryString(query, "q")} /></div>
       {statuses.length > 0 && <SelectField label={common.labels.status} name="status" defaultValue={queryString(query, "status")}><option value="">{t.all}</option>{statuses.map(value => <option key={value} value={value}>{(section === "payments" ? common.paymentStatuses[value as keyof typeof common.paymentStatuses] : common.statuses[value as keyof typeof common.statuses]) || value}</option>)}</SelectField>}
-      {dates && <><Field label={t.periodFrom} type="date" name="from" defaultValue={queryString(query, "from")} /><Field label={t.periodTo} type="date" name="to" defaultValue={queryString(query, "to")} /></>}
+      {dates && <><Field label={t.periodFrom} type="date" name="from" min="1970-01-01" defaultValue={queryString(query, "from")} /><Field label={t.periodTo} type="date" name="to" min="1970-01-01" defaultValue={queryString(query, "to")} /></>}
       {children}
       <button type="submit" className="admin-button admin-button-gold">{t.filters}</button><Link className="admin-button" href={`/${locale}/admin/${section}`}>{t.reset}</Link>
     </NavigationForm>

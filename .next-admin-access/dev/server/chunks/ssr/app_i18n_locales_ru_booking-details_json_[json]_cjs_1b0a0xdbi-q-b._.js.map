@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/booking-details.json"],"sourcesContent":["{\"title\":\"Детали бронирования\",\"eyebrow\":\"ВАША ПОЕЗДКА\",\"description\":\"Актуальный статус, даты и стоимость вашего проживания.\"}"],"names":[],"mappings":""}}]
-}

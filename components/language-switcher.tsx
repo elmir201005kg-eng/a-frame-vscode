@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { PremiumSelect } from "@/components/premium-select";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/client/router";
 import { LanguageFlag } from "@/components/language-flag";
 import { isLocale, localeCookie, locales } from "@/app/i18n/config";
 import type { Locale } from "@/app/i18n/config";
@@ -24,7 +24,6 @@ export function LanguageSwitcher({ locale, labels, reloadDocument = false }: { l
     else segments.splice(1, 0, nextLocale);
     target.pathname = segments.join("/");
     if (reloadDocument || !navigator.onLine || document.querySelector("[data-offline-page]")) {
-      // Next.js 16 can duplicate hashes when returning to a cached not-found route.
       window.location.assign(target.href);
       return;
     }

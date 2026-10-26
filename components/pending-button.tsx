@@ -2,7 +2,7 @@
 
 import type { ButtonHTMLAttributes } from "react";
 import { useFormStatus } from "react-dom";
-import { useNavigationPending } from "@/components/navigation-form";
+import { useRouterState } from "@/client/router";
 
 export function Spinner() {
   return <span className="ui-spinner" aria-hidden="true" />;
@@ -17,6 +17,6 @@ export function PendingButton({ pending = false, children, disabled, ...props }:
 
 export function SubmitButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   const status = useFormStatus();
-  const navigating = useNavigationPending();
-  return <PendingButton {...props} type="submit" pending={status.pending || navigating} />;
+  const router = useRouterState();
+  return <PendingButton {...props} type="submit" pending={status.pending || router.pending} />;
 }

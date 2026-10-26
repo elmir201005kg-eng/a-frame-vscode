@@ -29,7 +29,7 @@ test("manifest, icons and worker headers support installation", async ({ page, r
     expect(png.readUInt32BE(16)).toBe(size);
     expect(png.readUInt32BE(20)).toBe(size);
   }
-  const worker = await request.get(process.env.NEXT_PUBLIC_PWA_WORKER_PATH || "/sw.js");
+  const worker = await request.get(process.env.VITE_PWA_WORKER_PATH || "/sw.js");
   expect(worker.headers()["cache-control"]).toContain("no-store");
   expect(worker.headers()["service-worker-allowed"]).toBe("/");
   expect(await worker.text()).not.toContain("__PWA_VERSION__");

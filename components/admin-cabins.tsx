@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/image";
 import { Plus, House, ArrowUpRight } from "lucide-react";
 import Link from "@/components/navigation-link";
 import { db } from "@/lib/db";

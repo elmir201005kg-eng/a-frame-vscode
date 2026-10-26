@@ -27,13 +27,13 @@ export async function AdminPeople({ ctx }: { ctx: AdminContext }) {
     </AdminTable><AdminPagination ctx={ctx} section="users" count={count} page={page} /></>;
 }
 
-export async function AdminAudit({ ctx, adminOnly = false }: { ctx: AdminContext; adminOnly?: boolean }) {
-  const { locale, common, query, text: { manage: t } } = ctx, section = adminOnly ? "audit" : "activities", q = queryString(query, "q"), range = adminDateFilter(query);
+export async function AdminAudit({ ctx }: { ctx: AdminContext }) {
+  const { locale, common, query, text: { manage: t } } = ctx, section = "audit", q = queryString(query, "q"), range = adminDateFilter(query), scope = queryString(query, "scope") === "admins" ? "admins" : "all", adminOnly = scope === "admins";
   const where: Prisma.AuditLogWhereInput = { ...(adminOnly ? { AND: [{ OR: [{ user: { role: { in: ["ADMIN", "SUPER_ADMIN"] } } }, { newData: { path: ["actorRole"], equals: "ADMIN" } }, { newData: { path: ["actorRole"], equals: "SUPER_ADMIN" } }] }] } : {}), ...(range.where ? { createdAt: range.where } : {}),
     ...(q ? { OR: [{ action: { contains: q, mode: "insensitive" } }, { entityType: { contains: q, mode: "insensitive" } }, { user: { email: { contains: q, mode: "insensitive" } } }] } : {}) };
   const count = await db.auditLog.count({ where }), page = Math.min(adminPage(query), Math.max(1, Math.ceil(count / 20)));
   const rows = await db.auditLog.findMany({ where, take: 20, skip: (page - 1) * 20, orderBy: [{ createdAt: "desc" }, { id: "desc" }], include: { user: { select: { firstName: true, email: true } } } });
-  return <><AdminPageHeading ctx={ctx} section={section} /><AdminFilters ctx={ctx} section={section} dates /><AdminTable headings={[t.date, t.activity, common.labels.name, t.details]} empty={!rows.length} caption={common.labels.empty}>
+  return <><AdminPageHeading ctx={ctx} section={section} /><AdminFilters ctx={ctx} section={section} dates><SelectField name="scope" label={common.labels.role} defaultValue={scope}><option value="all">{t.all}</option><option value="admins">{common.statuses.ADMIN}</option></SelectField></AdminFilters><AdminTable headings={[t.date, t.activity, common.labels.name, t.details]} empty={!rows.length} caption={common.labels.empty}>
     {rows.map(row => <tr key={String(row.id)}><td>{adminDate(row.createdAt, locale)}</td><td>{common.events[row.action.replace(/\.([a-z])/g, (_, letter: string) => letter.toUpperCase()) as keyof typeof common.events] || row.action}<small>{row.entityType} #{String(row.entityId)}</small></td><td>{row.user?.firstName || "—"}<small>{row.user?.email}</small></td><td><details className="admin-row-details"><summary>{t.details}</summary><div className="admin-row-actions"><strong>{t.oldValue}</strong><pre>{row.oldData ? JSON.stringify(row.oldData, null, 2) : "—"}</pre><strong>{t.newValue}</strong><pre>{row.newData ? JSON.stringify(row.newData, null, 2) : "—"}</pre></div></details></td></tr>)}
   </AdminTable><AdminPagination ctx={ctx} section={section} count={count} page={page} /></>;
 }

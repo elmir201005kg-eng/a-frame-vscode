@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/owner.json"],"sourcesContent":["{\"title\":\"Ваше гостеприимство\",\"eyebrow\":\"КАБИНЕТ ВЛАДЕЛЬЦА\",\"description\":\"Управляйте объектами, календарём и заявками гостей.\"}"],"names":[],"mappings":""}}]
-}

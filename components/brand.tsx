@@ -1,19 +1,14 @@
-import Image from "next/image";
-import Link from "@/components/navigation-link";
+import Image from "@/components/image";
 
 export function Brand({
   inverse = false,
-  label,
-  href = "#top",
   className = "",
 }: {
   inverse?: boolean;
-  label: string;
-  href?: string;
   className?: string;
 }) {
   return (
-    <Link className={`brand${inverse ? " brand-inverse" : ""}${className ? ` ${className}` : ""}`} href={href} aria-label={label}>
+    <div className={`brand${inverse ? " brand-inverse" : ""}${className ? ` ${className}` : ""}`} role="img" aria-label="a-frame">
       <Image
         className="brand-mark"
         src="/brand/a-frame-logo.png"
@@ -25,6 +20,6 @@ export function Brand({
         loading="eager"
       />
       <span className="brand-wordmark">a-frame</span>
-    </Link>
+    </div>
   );
 }

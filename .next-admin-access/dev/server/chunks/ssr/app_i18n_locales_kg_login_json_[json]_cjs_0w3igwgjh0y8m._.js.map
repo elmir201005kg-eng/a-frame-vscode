@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/kg/login.json"],"sourcesContent":["{\"title\":\"Кайтып келгениңизге кубанычтабыз\",\"eyebrow\":\"A-FRAME KG\",\"description\":\"Эс алууну пландоону улантуу үчүн кириңиз.\"}"],"names":[],"mappings":""}}]
-}

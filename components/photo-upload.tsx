@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useTransition } from "react";
 import { PendingButton } from "@/components/pending-button";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/client/router";
 import type { FormEvent } from "react";
 import type { CommonDictionary } from "@/app/i18n/platform";
 import { Field } from "@/components/premium-fields";

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/account.json"],"sourcesContent":["{\"title\":\"Ваши планы на отдых\",\"eyebrow\":\"ЛИЧНЫЙ КАБИНЕТ\",\"description\":\"Бронирования, любимые места и важные сообщения — в одном месте.\"}"],"names":[],"mappings":""}}]
-}

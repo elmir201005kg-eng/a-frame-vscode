@@ -2,9 +2,11 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { lockCabin } from "@/lib/booking";
-import { isDemoBooking } from "@/lib/demo";
+import { throttle } from "@/lib/throttle";
+import type { Locale } from "@/app/i18n/config";
 import { fail } from "@/lib/validation";
 import { FINIK_PAYMENT_AMOUNT, FINIK_PAYMENT_METHOD } from "@/lib/finik-config";
+import { createFinikPayment, finikConfiguration } from "@/lib/finik";
 import type { FinikWebhookEvent } from "@/lib/finik";
 import { notifyAdministrators } from "@/lib/admin-events";
 
@@ -19,7 +21,7 @@ export async function prepareFinikPayment(userId: bigint, bookingId: bigint, cli
       where: { id: bookingId },
       include: { cabin: { select: { isDemo: true } }, payments: { orderBy: { createdAt: "desc" } } },
     });
-    if (isDemoBooking(booking) || !["PENDING", "CONFIRMED"].includes(booking.status) ||
+    if (!["PENDING", "CONFIRMED"].includes(booking.status) ||
         booking.payments.some((payment) => ["PAID", "REFUNDED"].includes(payment.status))) fail("paymentUnavailable");
     const pending = booking.payments.find((payment) => payment.status === "PENDING" &&
       [FINIK_PAYMENT_METHOD, "AWAITING_CONFIGURATION"].includes(payment.paymentMethod));
@@ -37,6 +39,26 @@ export async function prepareFinikPayment(userId: bigint, bookingId: bigint, cli
   });
 }
 
+export async function startFinikPayment(input: {
+  userId: bigint;
+  bookingId: bigint;
+  locale: Locale;
+  requestUrl: string;
+}): Promise<string> {
+  // Reject missing configuration before throttling or reserving an attempt.
+  finikConfiguration(input.requestUrl);
+  await throttle(`finik-payment:${input.userId}`, 10);
+  const { payment, bookingNumber } = await prepareFinikPayment(input.userId, input.bookingId);
+  const paymentUrl = payment.paymentUrl || await createFinikPayment({
+    paymentId: payment.providerPaymentId!, bookingId: input.bookingId.toString(),
+    bookingNumber, userId: input.userId.toString(), locale: input.locale, requestUrl: input.requestUrl,
+  });
+  if (!payment.paymentUrl)
+    await db.payment.update({ where: { id: payment.id }, data: { paymentUrl } });
+  console.info(`[finik] Payment ${payment.providerPaymentId} created: ${FINIK_PAYMENT_AMOUNT} KGS`);
+  return paymentUrl;
+}
+
 export async function applyFinikWebhook(event: FinikWebhookEvent, client: PaymentDatabase = db) {
   return client.$transaction(async (tx) => {
     const original = await tx.payment.findUnique({
@@ -50,7 +72,7 @@ export async function applyFinikWebhook(event: FinikWebhookEvent, client: Paymen
     });
     if (payment.userId !== event.userId || payment.bookingId !== event.bookingId ||
         payment.paymentMethod !== FINIK_PAYMENT_METHOD || payment.currency !== "KGS" ||
-        !payment.amount.equals(FINIK_PAYMENT_AMOUNT) || isDemoBooking(payment.booking)) fail("invalidPayment");
+        !payment.amount.equals(FINIK_PAYMENT_AMOUNT)) fail("invalidPayment");
     // A delayed failure must never downgrade an already received or refunded payment.
     if (payment.status === "PAID" || payment.status === "REFUNDED") {
       if (event.status === "SUCCEEDED" && payment.transactionId !== event.transactionId) fail("invalidPayment");

@@ -1,43 +1,20 @@
-import localFont from "next/font/local";
-import type { Metadata, Viewport } from "next";
-import { notFound } from "next/navigation";
-import { isLocale, locales, localeSettings } from "@/app/i18n/config";
+import type { ReactNode } from "react";
+import { notFound } from "@/server/navigation";
+import { isLocale, localeSettings } from "@/app/i18n/config";
 import { FormDesignProvider } from "@/components/form-design-provider";
 import { PwaManager } from "@/components/pwa-manager";
-import { Suspense } from "react";
-import { AiConsultant } from "@/components/ai-consultant";
-import { pwaThemeColor } from "@/lib/pwa";
+import { MetadataTags } from "@/server/metadata";
+import type { LayoutProps, Metadata } from "@/server/types";
 import "../globals.css";
 import "../forms.css";
 import "../ai-widget.css";
+import "../gallery.css";
 
-export const metadata: Metadata = {
-  applicationName: "A-FRAME KG",
-  manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "A-FRAME KG", statusBarStyle: "black-translucent" },
-  icons: { apple: [{ url: "/pwa/apple-touch-icon.png", sizes: "180x180", type: "image/png" }] },
-};
-
-export const viewport: Viewport = { themeColor: pwaThemeColor, width: "device-width", initialScale: 1, viewportFit: "cover" };
-
-const manrope = localFont({
-  src: "../../public/fonts/manrope-variable.ttf",
-  variable: "--font-manrope",
-  weight: "200 800",
-  display: "swap",
-});
-
-export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
-
-export default async function RootLayout({ children, params }: LayoutProps<"/[locale]">) {
+export default async function RootLayout({ children, params, metadata, navigation }: LayoutProps & { metadata?: Metadata; navigation?: ReactNode }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-
-  return (
-    <html lang={localeSettings[locale].htmlLang} className={manrope.variable} data-scroll-behavior="smooth">
-      <body><FormDesignProvider locale={locale}>{children}</FormDesignProvider><PwaManager locale={locale} /><Suspense fallback={null}><AiConsultant locale={locale} /></Suspense></body>
-    </html>
-  );
+  return <html lang={localeSettings[locale].htmlLang} data-scroll-behavior="smooth">
+    <head><MetadataTags metadata={metadata} /></head>
+    <body>{navigation}<FormDesignProvider locale={locale}>{children}</FormDesignProvider><PwaManager locale={locale} /></body>
+  </html>;
 }

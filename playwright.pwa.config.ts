@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // Offline tests only read public pages; they do not need database fixtures.
-const port = 3108;
+const port = Number(process.env.E2E_PORT || 3108);
 export default defineConfig({
   testDir: "./tests/pwa",
   outputDir: "./pwa-test-results",

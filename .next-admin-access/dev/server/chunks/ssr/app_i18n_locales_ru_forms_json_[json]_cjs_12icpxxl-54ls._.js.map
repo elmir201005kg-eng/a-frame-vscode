@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/ru/forms.json"],"sourcesContent":["{\"choose\":\"Выберите вариант\",\"required\":\"обязательное поле\",\"selectDate\":\"Выберите дату\",\"close\":\"Закрыть\",\"clear\":\"Очистить\",\"done\":\"Готово\",\"decrease\":\"Уменьшить число гостей\",\"increase\":\"Увеличить число гостей\",\"capacity\":\"Вместимость: до {count} гостей\",\"guestCount\":\"Количество гостей\",\"guestForms\":{\"one\":\"{count} гость\",\"few\":\"{count} гостя\",\"many\":\"{count} гостей\",\"other\":\"{count} гостей\"},\"activeFilters\":\"Активные фильтры\",\"removeFilter\":\"Убрать фильтр: {filter}\",\"rangeHint\":\"Выберите заезд, затем выезд.\",\"calendarKeyboard\":\"Стрелки — соседний день; Page Up / Down — месяц; Home / End — начало / конец недели.\",\"today\":\"Сегодня\"}"],"names":[],"mappings":""}}]
-}

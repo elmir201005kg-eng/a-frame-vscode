@@ -1,6 +1,6 @@
+import { cachedPublic } from "@/server/cache";
 import "server-only";
 import { cache } from "react";
-import { cacheLife, cacheTag, io } from "next/cache";
 import type { Locale } from "@/app/i18n/config";
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
@@ -117,25 +117,24 @@ export function cabinDto(cabin: CabinRecord, locale: Locale, favorites: string[]
   };
 }
 export async function references(locale: Locale) {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
-  cacheTag("catalog-references");
-  const [regions, amenities] = await Promise.all([
-    db.region.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
-    db.amenity.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
-  ]);
-  return {
-    regions: regions.map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      name: localizedName(row, locale),
-    })),
-    amenities: amenities.map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      name: localizedName(row, locale),
-    })),
-  };
+  return cachedPublic(`catalog-references:${locale}`, ["catalog-references"], async () => {
+    const [regions, amenities] = await Promise.all([
+      db.region.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+      db.amenity.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+    ]);
+    return {
+      regions: regions.map((row) => ({
+        id: row.id,
+        slug: row.slug,
+        name: localizedName(row, locale),
+      })),
+      amenities: amenities.map((row) => ({
+        id: row.id,
+        slug: row.slug,
+        name: localizedName(row, locale),
+      })),
+    };
+  });
 }
 export const favoriteIds = cache(async (userId?: bigint) => {
   if (!userId) return [];
@@ -144,7 +143,7 @@ export const favoriteIds = cache(async (userId?: bigint) => {
   );
 });
 export async function featuredCabins(locale: Locale, userId?: bigint) {
-  await io();
+
   const [rows, saved] = await Promise.all([
     db.cabin.findMany({ where: publicCabinWhere(), select: cabinCardSelect, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 6 }),
     favoriteIds(userId),
@@ -152,7 +151,7 @@ export async function featuredCabins(locale: Locale, userId?: bigint) {
   return { cabins: rows.map(row => cabinCardDto(row, locale, saved)) };
 }
 export async function searchCabins(params: SearchParams, locale: Locale, userId?: bigint) {
-  await io();
+
   const q = single(params, "q").trim().slice(0, 100),
     region = single(params, "region"),
     sort = single(params, "sort");
@@ -219,15 +218,24 @@ export async function searchCabins(params: SearchParams, locale: Locale, userId?
   if (single(params, "favorites") === "1")
     filters.push(userId ? { favorites: { some: { userId } } } : { id: BigInt(-1) });
   const where = { AND: filters };
-  const [total, saved] = await Promise.all([db.cabin.count({ where }), favoriteIds(userId)]);
-  const pages = Math.max(1, Math.ceil(total / 6));
-  const page = Math.min(pages, Math.max(1, Number.parseInt(single(params, "page"), 10) || 1));
+  const requestedPage = Math.max(1, Number.parseInt(single(params, "page"), 10) || 1);
+  const firstReadPage = Number.isSafeInteger(requestedPage) && (requestedPage - 1) * 6 <= 2147483647 ? requestedPage : 1;
   const orderBy: Prisma.CabinOrderByWithRelationInput[] =
     sort === "priceAsc"
       ? [{ pricePerNight: "asc" }, { id: "desc" }]
       : sort === "priceDesc"
         ? [{ pricePerNight: "desc" }, { id: "desc" }]
         : [{ createdAt: "desc" }, { id: "desc" }];
-  const rows = await db.cabin.findMany({ where, select: cabinCardSelect, orderBy, skip: (page - 1) * 6, take: 6 });
+  // Normal pages do not depend on count(). Only an out-of-range URL needs a
+  // second read to retain the existing clamp-to-last-page behavior.
+  const [total, saved, requestedRows] = await Promise.all([
+    db.cabin.count({ where }),
+    favoriteIds(userId),
+    db.cabin.findMany({ where, select: cabinCardSelect, orderBy, skip: (firstReadPage - 1) * 6, take: 6 }),
+  ]);
+  const pages = Math.max(1, Math.ceil(total / 6));
+  const page = Math.min(pages, requestedPage);
+  const rows = page === firstReadPage ? requestedRows
+    : await db.cabin.findMany({ where, select: cabinCardSelect, orderBy, skip: (page - 1) * 6, take: 6 });
   return { cabins: rows.map((row) => cabinCardDto(row, locale, saved)), total, page, pages };
 }

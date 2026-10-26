@@ -1,20 +1,20 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { usePathname } from "next/navigation";
+import dynamic from "@/components/lazy-component";
+import { usePathname } from "@/client/router";
 import { useRef, useState } from "react";
 import type { Locale } from "@/app/i18n/config";
-import { aiText } from "@/app/i18n/ai";
+import type { aiText } from "@/app/i18n/ai";
 import { Icon } from "@/components/icon";
 import { CabinAssistantMark } from "./ai-mark";
 
 const ChatPanel = dynamic(() => import("./ai-chat-panel").then(module => module.AiChatPanel), { ssr: false });
 
-export function AiConsultant({ locale }: { locale: Locale }) {
+export function AiConsultant({ locale, labels }: { locale: Locale; labels: Pick<(typeof aiText)[Locale], "open" | "close"> }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const launcher = useRef<HTMLButtonElement>(null);
-  const t = aiText[locale];
+  const t = labels;
   if (/\/(?:admin(?:\/|-|$)|owner(?:\/|$)|offline(?:\/|$))/.test(pathname)) return null;
   function close() { setOpen(false); launcher.current?.focus(); }
   return <div className="af-ai-widget" data-ai-widget data-open={open}>

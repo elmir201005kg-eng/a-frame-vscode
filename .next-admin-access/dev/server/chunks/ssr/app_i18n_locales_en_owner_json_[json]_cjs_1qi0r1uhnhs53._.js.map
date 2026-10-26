@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["turbopack:///app/i18n/locales/en/owner.json"],"sourcesContent":["{\"title\":\"Your hospitality\",\"eyebrow\":\"OWNER WORKSPACE\",\"description\":\"Manage your properties, calendar and guest requests.\"}"],"names":[],"mappings":""}}]
-}

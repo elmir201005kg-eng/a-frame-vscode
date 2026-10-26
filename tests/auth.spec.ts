@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { Pool } from "pg";
-import en from "../app/i18n/locales/en/common.json";
+import en from "../app/i18n/locales/en/common.json" with { type: "json" };
 
 const connection = new URL(process.env.E2E_DATABASE_URL!);
 const schema = connection.searchParams.get("schema") || "public";
@@ -124,7 +124,7 @@ for (const locale of ["ru", "kg", "en"]) {
         await expect(page.locator(".auth-tabs a[aria-current='page']")).toHaveAttribute("href", new RegExp(`/${mode}`));
         await expect(page.locator(".header-sign-in")).toBeVisible();
         await expect(page.locator(".google-auth-button")).toBeVisible();
-        expect(await page.locator(".google-auth-button img").evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+        await expect.poll(() => page.locator(".google-auth-button img").evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       }
     }

@@ -1,7 +1,8 @@
 import { ResourceUnavailable } from "@/components/resource-unavailable";
+import { randomUUID } from "node:crypto";
+import { Suspense, type ComponentProps } from "react";
 
 import Link from "@/components/navigation-link";
-import { io } from "next/cache";
 import { routeLocale } from "@/lib/route";
 import { db } from "@/lib/db";
 import { cabinInclude, cabinDto, cabinCardSelect, cabinCardDto, favoriteIds, single, publicCabinWhere } from "@/lib/catalog";
@@ -29,7 +30,7 @@ export default async function CabinPage({
   const locale = await routeLocale(params),
     { slug } = await params,
     query = await searchParams;
-  await io();
+
   const [record, { common }, user] = await Promise.all([
     db.cabin.findFirst({
       where: publicCabinWhere({ slug }),
@@ -42,16 +43,15 @@ export default async function CabinPage({
   const start = today();
   const end = new Date(start + "T00:00:00Z");
   end.setUTCFullYear(end.getUTCFullYear() + 1);
-  const [blocked, reviews, saved, relatedRecords] = await Promise.all([
-    blockedNights(record.id, start, end),
-    db.review.findMany({
+  const blocked = blockedNights(record.id, start, end);
+  const reviews = db.review.findMany({
       where: { cabinId: record.id, status: "PUBLISHED" },
       include: { user: { select: { firstName: true } } },
       orderBy: { createdAt: "desc" },
       take: 30,
-    }),
-    favoriteIds(user?.id),
-    (async () => {
+    });
+  const saved = await favoriteIds(user?.id);
+  const relatedRecords = (async () => {
       const nearby = await db.cabin.findMany({
         where: publicCabinWhere({
           id: { not: record.id },
@@ -72,10 +72,9 @@ export default async function CabinPage({
         take: 3 - nearby.length,
       });
       return [...nearby, ...elsewhere];
-    })(),
-  ]);
+    })();
   const cabin = cabinDto(record, locale, saved);
-  const related = relatedRecords.map((row) => cabinCardDto(row, locale, saved));
+  const related = relatedRecords.then(rows => rows.map(row => cabinCardDto(row, locale, saved)));
   const requestedStay = {
     checkIn: single(query, "checkIn"),
     checkOut: single(query, "checkOut"),
@@ -114,9 +113,10 @@ export default async function CabinPage({
           locale={locale}
           common={common}
           next={currentHref}
+          authenticated={Boolean(user)}
         />
       </div>
-      <CabinGallery images={cabin.images} common={common} demo={cabin.isDemo} />
+      <CabinGallery images={cabin.images} common={common} demo={cabin.isDemo} locale={locale} />
       {cabin.categories.length > 0 && <div className="property-amenities" aria-label={common.nav.categories}>{cabin.categories.map(category => <span key={category.id}><Icon name="check" />{category.name}</span>)}</div>}
       {cabin.isDemo && <p className="product-notice">{common.labels.demoHint}</p>}
       <div className="property-detail-layout">
@@ -199,25 +199,15 @@ export default async function CabinPage({
               {common.nav.reviews}
               {cabin.reviewsCount > 0 && ` · ${formatNumber(cabin.rating, locale, { maximumFractionDigits: 1 })} (${formatNumber(cabin.reviewsCount, locale)})`}
             </h2>
-            {reviews.length ? (
-              reviews.map((review) => (
-                <article className="review-card" key={review.id.toString()}>
-                  <div>
-                    <strong>{review.user.firstName}</strong>
-                    <span>
-                      <Icon name="star" size={15} />
-                      {review.rating}
-                    </span>
-                  </div>
-                  <p>{review.text}</p>
-                </article>
-              ))
-            ) : (
-              <p>{common.labels.reviewEmpty}</p>
-            )}
+            <Suspense fallback={<p role="status">{common.labels.loading}</p>}>
+              <CabinReviews reviews={reviews} emptyLabel={common.labels.reviewEmpty} />
+            </Suspense>
           </section>
         </div>
-        <StaySelector
+        <Suspense key={currentHref} fallback={<aside className="stay-selector product-panel" role="status" aria-busy="true">{common.labels.loading}</aside>}>
+        <CabinStaySelector
+          key={currentHref}
+          requestKey={randomUUID()}
           cabinId={cabin.id}
           slug={slug}
           price={cabin.price}
@@ -234,8 +224,31 @@ export default async function CabinPage({
             guests: requestedStay.guests || "1",
           }}
         />
+        </Suspense>
       </div>
-      {related.length > 0 && (
+      <Suspense fallback={null}>
+        <RelatedCabins cabins={related} locale={locale} common={common} next={currentHref} authenticated={Boolean(user)} stay={requestedStay} />
+      </Suspense>
+    </>
+  );
+}
+
+async function CabinStaySelector({ blocked, ...props }: Omit<ComponentProps<typeof StaySelector>, "blocked"> & { blocked: Promise<string[]> }) {
+  return <StaySelector {...props} blocked={await blocked} />;
+}
+
+async function CabinReviews({ reviews, emptyLabel }: { reviews: PromiseLike<{ id: bigint; user: { firstName: string }; rating: number; text: string | null }[]>; emptyLabel: string }) {
+  const rows = await reviews;
+  return rows.length ? rows.map(review => <article className="review-card" key={review.id.toString()}>
+    <div><strong>{review.user.firstName}</strong><span><Icon name="star" size={15} />{review.rating}</span></div>
+    <p>{review.text}</p>
+  </article>) : <p>{emptyLabel}</p>;
+}
+
+async function RelatedCabins({ cabins, ...props }: Omit<ComponentProps<typeof PropertyCard>, "cabin"> & { cabins: Promise<ComponentProps<typeof PropertyCard>["cabin"][]> }) {
+  const related = await cabins;
+  const { locale, common } = props;
+  return related.length > 0 && (
         <section className="similar-cabins" aria-labelledby="similar-cabins-title">
           <div className="section-heading">
             <div>
@@ -252,15 +265,10 @@ export default async function CabinPage({
               <PropertyCard
                 key={item.id}
                 cabin={item}
-                locale={locale}
-                common={common}
-                next={currentHref}
-                stay={requestedStay}
+                {...props}
               />
             ))}
           </div>
         </section>
-      )}
-    </>
-  );
+      );
 }

@@ -6,8 +6,8 @@ export default defineConfig({
   timeout: 60000, expect: { timeout: 15000 }, reporter: "list",
   use: { ...devices["Desktop Chrome"], channel: process.env.E2E_BROWSER_CHANNEL || "chrome", baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   webServer: {
-    command: `node node_modules/next/dist/bin/next ${process.env.AI_QA_PRODUCTION === "true" ? "start" : "dev"} --port ${port}`,
+    command: process.env.AI_QA_PRODUCTION === "true" ? `npm run start -- --port ${port}` : `npm run dev -- --port ${port}`,
     url: `http://localhost:${port}/ru`, reuseExistingServer: false, timeout: 120000,
-    env: { NEXT_DIST_DIR: ".next/ai-qa", AI_PROVIDER: "faq", AI_TRUST_PROXY: "false", APP_URL: `http://localhost:${port}` },
+    env: { BUILD_DIR: "dist", AI_PROVIDER: "faq", AI_TRUST_PROXY: "false", APP_URL: `http://localhost:${port}` },
   },
 });

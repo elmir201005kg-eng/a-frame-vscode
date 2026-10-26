@@ -1,7 +1,6 @@
 import { isAdminRole } from "@/lib/roles";
 import "server-only";
-import { cookies } from "next/headers";
-import { io } from "next/cache";
+import { cookies } from "@/server/context";
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import type { Locale } from "@/app/i18n/config";
 import { baseDictionary } from "@/app/i18n/platform";
@@ -28,7 +27,7 @@ async function challengeId() {
 }
 
 export async function getPendingAdminLogin() {
-  await io();
+
   const id = await challengeId();
   if (!id) return false;
   const challenge = await db.adminLoginChallenge.findUnique({ where: { id }, include: { user: true } });

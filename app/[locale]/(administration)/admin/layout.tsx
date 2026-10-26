@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import type { Metadata } from "next";
+import type { Metadata } from "@/server/types";
 import { routeLocale } from "@/lib/route";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -22,7 +22,7 @@ async function ProtectedAdmin({ children, params }: { children: ReactNode; param
   ]);
   return <AdminShell locale={locale} text={text} common={common} language={landing.language}
     name={[user.firstName, user.lastName].filter(Boolean).join(" ")} unread={unread}
-    notifications={notifications.map(row => ({ id: row.id.toString(), title: common.events[row.type.replace(/\.([a-z])/g, (_, letter: string) => letter.toUpperCase()) as keyof typeof common.events] || row.title, message: common.statuses[row.message as keyof typeof common.statuses] || row.message, href: row.bookingId ? `/${locale}/bookings/${row.bookingId}` : `/${locale}/admin/notifications` }))}>{children}</AdminShell>;
+    notifications={notifications.map(row => ({ id: row.id.toString(), title: common.events[row.type.replace(/\.([a-z])/g, (_, letter: string) => letter.toUpperCase()) as keyof typeof common.events] || row.title, message: common.statuses[row.message as keyof typeof common.statuses] || row.message, href: row.bookingId ? `/${locale}/admin/bookings?bookingId=${row.bookingId.toString()}` : `/${locale}/admin/notifications` }))}>{children}</AdminShell>;
 }
 
 export default function AdminLayout(props: { children: ReactNode; params: Promise<{ locale: string }> }) {

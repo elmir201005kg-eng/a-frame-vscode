@@ -21,7 +21,7 @@ export function PwaManager({ locale }: { locale: Locale }) {
     let disposed = false;
     const rememberLocale = () => navigator.serviceWorker.controller?.postMessage({ type: "SET_LOCALE", locale });
     const register = () => {
-      void navigator.serviceWorker.register(process.env.NEXT_PUBLIC_PWA_WORKER_PATH || "/sw.js", { scope: "/", updateViaCache: "none" })
+      void navigator.serviceWorker.register(import.meta.env.VITE_PWA_WORKER_PATH || "/sw.js", { scope: "/", updateViaCache: "none" })
         .then(() => navigator.serviceWorker.ready)
         .then(() => { if (!disposed) rememberLocale(); })
         .catch((error: unknown) => console.warn("[PWA] Service worker registration failed:", error));
@@ -55,7 +55,7 @@ export function PwaManager({ locale }: { locale: Locale }) {
   }, []);
 
   useEffect(() => {
-    // Next's client navigation requests RSC, not HTML. Offline links must use a
+    // Client navigation requests RSC, not HTML. Offline links must use a
     // document navigation so the worker can return the complete offline home.
     const navigateOffline = (event: MouseEvent) => {
       if (navigator.onLine && !document.querySelector("[data-offline-page]")) return;
@@ -66,7 +66,7 @@ export function PwaManager({ locale }: { locale: Locale }) {
       if (target.origin !== window.location.origin) return;
       event.preventDefault();
       // Keep the component's click handler (for example, closing the mobile
-      // menu). Next Link sees defaultPrevented and skips its own navigation.
+      // menu). NavigationLink sees defaultPrevented and skips its own navigation.
       if (target.hash && (target.pathname === window.location.pathname || /^\/(kg|ru|en)\/?$/.test(target.pathname))) {
         const section = document.getElementById(decodeURIComponent(target.hash.slice(1)));
         if (section) { window.location.hash = target.hash; section.scrollIntoView(); return; }

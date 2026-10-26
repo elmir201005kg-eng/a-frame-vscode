@@ -276,7 +276,7 @@ export async function AdminContent({
   return (
     <>
       <div className="admin-section-heading">
-        <h2>{common.nav[section]}</h2>
+        <h2>{section === "support" ? admin.shell.support : common.nav[section]}</h2>
       </div>
       {content}
     </>

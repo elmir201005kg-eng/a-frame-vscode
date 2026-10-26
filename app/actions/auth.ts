@@ -1,7 +1,7 @@
 "use server";
 import { isAdminRole } from "@/lib/roles";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { redirect } from "@/server/navigation";
+import { revalidatePath } from "@/server/cache";
 import { db } from "@/lib/db";
 import { createSession, destroySession, requireUser, throttle } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/password";

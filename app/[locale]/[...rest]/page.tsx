@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { locale as getLocale } from "next/root-params";
+import type { Metadata } from "@/server/types";
+import { notFound } from "@/server/navigation";
+import { locale as getLocale } from "@/server/context";
 import { defaultLocale, isLocale } from "@/app/i18n/config";
 import { getNotFoundDictionary } from "@/app/i18n/not-found";
 

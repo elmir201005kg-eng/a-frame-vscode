@@ -1,6 +1,6 @@
 "use server";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { redirect } from "@/server/navigation";
+import { revalidatePath } from "@/server/cache";
 import type { ActionState } from "./auth";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";

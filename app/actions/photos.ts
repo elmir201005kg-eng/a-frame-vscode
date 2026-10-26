@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "@/server/cache";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { lockCabin } from "@/lib/booking";

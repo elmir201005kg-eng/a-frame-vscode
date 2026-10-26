@@ -1,9 +1,12 @@
 "use client";
 import { useState } from "react";
-import dynamic from "next/dynamic";
+import dynamic from "@/components/lazy-component";
 import { NavigationForm } from "@/components/navigation-form";
 import { PendingButton, SubmitButton, Spinner } from "@/components/pending-button";
 import { useAvailability } from "@/components/use-availability";
+import { useSafeAction } from "@/components/use-safe-action";
+import { demoBookingAction } from "@/app/actions/traveler";
+import { FINIK_PAYMENT_AMOUNT } from "@/lib/finik-config";
 import type { Locale } from "@/app/i18n/config";
 import type { CommonDictionary } from "@/app/i18n/platform";
 import { formatNumber } from "@/app/i18n/format";
@@ -16,6 +19,7 @@ const AvailabilityCalendar = dynamic(() => import("@/components/availability-cal
 
 export function StaySelector({
   cabinId,
+  requestKey,
   slug,
   price,
   maxGuests,
@@ -29,6 +33,7 @@ export function StaySelector({
   initial,
 }: {
   cabinId: string;
+  requestKey: string;
   slug: string;
   price: number;
   maxGuests: number;
@@ -43,32 +48,29 @@ export function StaySelector({
 }) {
   const [values, setValues] = useState(initial);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [state, action, pending] = useSafeAction(demoBookingAction, {});
   const { quote, code, checking, reset, check } = useAvailability();
   function update(name: string, value: string) {
     reset();
     setValues((previous) => ({ ...previous, [name]: value }));
   }
   const labels = common.labels;
-  return (
-    <aside className="stay-selector product-panel">
-      <p className="stay-price">
-        <strong>
-          {formatNumber(price, locale)} {labels.currency}
-        </strong>
-        <span>{labels.perNight}</span>
-      </p>
-      <NavigationForm action={`/${locale}/booking`} className="product-form">
+  const errorCode = code || state.code;
+  const errorMessage = errorCode === "paymentProviderUnavailable" ? labels.paymentProviderUnavailable
+    : common.errors[errorCode as keyof typeof common.errors] || common.errors.serverError;
+  const fields = (
+    <>
         <input name="cabin" value={slug} type="hidden" />
-        <PremiumDatePicker locale={locale} value={values} required today={today} blocked={blocked} maxDate={addDays(today, 365)}
+        <PremiumDatePicker locale={locale} value={values} required disabled={pending} today={today} blocked={blocked} maxDate={addDays(today, 365)}
           labels={{ checkIn: labels.checkIn, checkOut: labels.checkOut }}
           onValueChange={(range) => { reset(); setValues(previous => ({ ...previous, ...range })); }} />
-        <GuestSelector locale={locale} label={labels.guests} required value={values.guests} maxGuests={maxGuests} onValueChange={value => update("guests", value)} />
-        <PendingButton className="button button-outline" type="button" pending={checking} onClick={() => check({ cabinId, ...values })}>
+        <GuestSelector locale={locale} label={labels.guests} required disabled={pending} value={values.guests} maxGuests={maxGuests} onValueChange={value => update("guests", value)} />
+        <PendingButton className="button button-outline" type="button" disabled={pending} pending={checking} onClick={() => check({ cabinId, ...values })}>
           {checking ? labels.checking : labels.confirmAvailability}
         </PendingButton>
-        {code && (
+        {errorCode && !pending && (
           <p className="form-message form-error" role="alert">
-            {common.errors[code as keyof typeof common.errors] || common.errors.serverError}
+            {errorMessage}
           </p>
         )}
         {quote && (
@@ -81,10 +83,29 @@ export function StaySelector({
             </strong>
           </p>
         )}
-        <SubmitButton className="button button-primary">
-          {demo ? labels.demoBook : labels.book}
-        </SubmitButton>
-      </NavigationForm>
+        {demo ? <>
+          <p className="form-hint">{labels.demoPaymentHint.replace("{amount}", String(FINIK_PAYMENT_AMOUNT))}</p>
+          <PendingButton className="button button-primary" type="submit" pending={pending} disabled={checking}>
+            {pending ? labels.paymentCreating : labels.demoBook}
+          </PendingButton>
+        </> : <SubmitButton className="button button-primary">{labels.book}</SubmitButton>}
+    </>
+  );
+  return (
+    <aside className="stay-selector product-panel">
+      <p className="stay-price">
+        <strong>
+          {formatNumber(price, locale)} {labels.currency}
+        </strong>
+        <span>{labels.perNight}</span>
+      </p>
+      {demo ? <form action={action} className="product-form" aria-busy={pending}>
+        <input type="hidden" name="locale" value={locale} />
+        <input type="hidden" name="cabinId" value={cabinId} />
+        <input type="hidden" name="slug" value={slug} />
+        <input type="hidden" name="requestKey" value={requestKey} />
+        {fields}
+      </form> : <NavigationForm action={`/${locale}/booking`} className="product-form">{fields}</NavigationForm>}
       <details className="stay-calendar" onToggle={(event) => setCalendarOpen(event.currentTarget.open)}>
         <summary>{labels.availability}</summary>
         {calendarOpen && <AvailabilityCalendar
@@ -98,6 +119,7 @@ export function StaySelector({
           checkOut={values.checkOut}
           maxDate={addDays(today, 365)}
           onDay={(day) => {
+            if (pending) return;
             if (!values.checkIn || values.checkOut || day <= values.checkIn) {
               reset();
               setValues((previous) => ({ ...previous, checkIn: day, checkOut: "" }));

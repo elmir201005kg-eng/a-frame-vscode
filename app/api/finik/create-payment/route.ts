@@ -1,14 +1,12 @@
-import { NextResponse } from "next/server";
-import { getUser, throttle } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { createFinikPayment, finikConfiguration, finikRequestUrl } from "@/lib/finik";
-import { prepareFinikPayment } from "@/lib/finik-payments";
+import { getUser } from "@/lib/auth";
+import { finikRequestUrl } from "@/lib/finik";
+import { startFinikPayment } from "@/lib/finik-payments";
 import { FINIK_PAYMENT_AMOUNT } from "@/lib/finik-config";
 import { id, InputError } from "@/lib/validation";
 import { isLocale } from "@/app/i18n/config";
 
 function json(body: unknown, status = 200) {
-  return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
+  return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
@@ -23,17 +21,9 @@ export async function POST(request: Request) {
     const input = body as Record<string, unknown>;
     const bookingId = id(input.bookingId);
     if (typeof input.locale !== "string" || !isLocale(input.locale)) return json({ error: "invalidFields" }, 400);
-    // Fail configuration checks before reserving a payment attempt.
-    finikConfiguration(requestUrl);
-    await throttle(`finik-payment:${user.id}`, 10);
-    const { payment, bookingNumber } = await prepareFinikPayment(user.id, bookingId);
-    const paymentUrl = payment.paymentUrl || await createFinikPayment({
-      paymentId: payment.providerPaymentId!, bookingId: bookingId.toString(),
-      bookingNumber, userId: user.id.toString(), locale: input.locale, requestUrl,
+    const paymentUrl = await startFinikPayment({
+      userId: user.id, bookingId, locale: input.locale, requestUrl,
     });
-    if (!payment.paymentUrl)
-      await db.payment.update({ where: { id: payment.id }, data: { paymentUrl } });
-    console.info(`[finik] Payment ${payment.providerPaymentId} created: ${FINIK_PAYMENT_AMOUNT} KGS`);
     return json({ success: true, paymentUrl, amount: FINIK_PAYMENT_AMOUNT });
   } catch (error) {
     if (error instanceof InputError) {

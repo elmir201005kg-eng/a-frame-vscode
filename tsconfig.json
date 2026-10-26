@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2022",
     "lib": [
       "dom",
       "dom.iterable",
@@ -17,42 +17,39 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "paths": {
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "types": [
+      "vite/client",
+      "@vitejs/plugin-rsc/types"
+    ]
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    ".next-e2e/types/**/*.ts",
-    ".next-e2e/dev/types/**/*.ts",
-    ".next-e2e-production/types/**/*.ts",
-    ".next-e2e-production/dev/types/**/*.ts",
-    ".next-pwa/types/**/*.ts",
-    ".next-pwa/dev/types/**/*.ts",
-    ".next-forms-qa-production/types/**/*.ts",
-    ".next-forms-qa-production/dev/types/**/*.ts",
-    ".next-admin-access/types/**/*.ts",
-    ".next-admin-access/dev/types/**/*.ts",
-    ".next-admin-production/types/**/*.ts",
-    ".next-admin-production/dev/types/**/*.ts",
-    ".next/ai-qa/types/**/*.ts",
-    ".next/ai-qa/dev/types/**/*.ts"
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "client/**/*.ts",
+    "client/**/*.tsx",
+    "server/**/*.ts",
+    "server/**/*.tsx",
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "*.ts"
   ],
   "exclude": [
     "node_modules",
-    ".next-e2e",
-    ".next-e2e-production"
+    "dist",
+    "generated/prisma",
+    ".next",
+    "next.config.ts",
+    "proxy.ts",
+    "next-env.d.ts"
   ]
 }

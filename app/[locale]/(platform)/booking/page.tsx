@@ -1,7 +1,7 @@
 import { ResourceUnavailable } from "@/components/resource-unavailable";
 import { randomUUID } from "node:crypto";
-import { redirect } from "next/navigation";
-import Image from "next/image";
+import { redirect } from "@/server/navigation";
+import Image from "@/components/image";
 import Link from "@/components/navigation-link";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";

@@ -1,6 +1,6 @@
 "use client";
 import Link from "@/components/navigation-link";
-import Image from "next/image";
+import Image from "@/components/image";
 import { useEffect, useRef, useState } from "react";
 import { Brand } from "@/components/brand";
 import { Icon } from "@/components/icon";
@@ -9,6 +9,7 @@ import type { Locale } from "@/app/i18n/config";
 import type { LandingDictionary } from "@/app/i18n/dictionaries";
 import { formatNumber } from "@/app/i18n/format";
 import { LogoutForm } from "@/components/logout-form";
+import { isAdminRole } from "@/lib/roles";
 
 export function SiteHeader({
   locale,
@@ -16,12 +17,14 @@ export function SiteHeader({
   user = null,
   favoriteCount = 0,
   logoutError,
+  offline = false,
 }: {
   locale: Locale;
   dictionary: Pick<LandingDictionary, "header" | "language" | "accessibility">;
   user?: { name: string; role: string; avatarUrl: string | null } | null;
   favoriteCount?: number;
   logoutError: string;
+  offline?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -32,10 +35,11 @@ export function SiteHeader({
   const links = [
     { href: `/${locale}`, label: text.home },
     { href: `/${locale}/catalog`, label: text.cabins },
-    { href: `/${locale}#destinations`, label: text.destinations },
-    { href: `/${locale}#how-it-works`, label: text.howItWorks },
+    { href: `/${locale}/portfolio`, label: text.portfolio },
+    { href: offline ? `/${locale}#destinations` : `/${locale}/destinations`, label: text.destinations },
+    { href: offline ? `/${locale}#how-it-works` : `/${locale}/how-it-works`, label: text.howItWorks },
   ];
-  const accountHref = `/${locale}/${user?.role === "ADMIN" ? "admin" : user?.role === "OWNER" ? "owner" : "account"}`;
+  const accountHref = `/${locale}/${isAdminRole(user?.role) ? "admin" : user?.role === "OWNER" ? "owner" : "account"}`;
   const accountLinks = [
     { href: `/${locale}/account?tab=profile`, label: text.myProfile, icon: "user" as const },
     { href: `/${locale}/account?tab=bookings`, label: text.myBookings, icon: "calendar" as const },
@@ -75,7 +79,7 @@ export function SiteHeader({
   return (
     <header className="site-header" ref={headerRef}>
       <div className="header-inner section-shell">
-        <Brand label={dictionary.accessibility.brandHome} href={`/${locale}`} />
+        <Brand />
         <nav className="desktop-nav" aria-label={text.navigation}>
           {links.map((link) => (
             <Link key={link.href} href={link.href}>
@@ -99,10 +103,6 @@ export function SiteHeader({
             {favoriteCount > 0 && (
               <span className="header-favorites-count">{formatNumber(favoriteCount, locale)}</span>
             )}
-          </Link>
-          <Link className="button button-primary header-book" href={`/${locale}/catalog`}>
-            {text.findCabin}
-            <Icon name="arrow-up-right" size={17} />
           </Link>
           {user ? <div className="header-account" ref={accountRef} onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget)) setAccountOpen(false);
@@ -162,14 +162,6 @@ export function SiteHeader({
           {user && (
             <LogoutForm locale={locale} label={text.logout} errorLabel={logoutError} buttonClassName="mobile-account-link" />
           )}
-          <Link
-            className="button button-primary"
-            href={`/${locale}/catalog`}
-            onClick={() => setMenuOpen(false)}
-          >
-            {text.findYourCabin}
-            <Icon name="search" size={18} />
-          </Link>
         </nav>
       )}
     </header>

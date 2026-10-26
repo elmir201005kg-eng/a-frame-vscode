@@ -70,9 +70,11 @@ export default async function BookingDetailsPage({
       booking.cancelUntil > new Date() &&
       !booking.payments.some((row) => row.status === "PAID");
   const demo = isDemoBooking(booking);
-  const canPay = finikConfigured() && !demo && isGuest && ["PENDING", "CONFIRMED"].includes(booking.status) &&
+  const paymentEligible = isGuest && ["PENDING", "CONFIRMED"].includes(booking.status) &&
     !booking.payments.some((payment) => ["PAID", "REFUNDED"].includes(payment.status));
-  const awaitingConfirmation = isGuest && single(await searchParams, "payment") === "success" &&
+  const canPay = finikConfigured() && paymentEligible;
+  const paymentResult = single(await searchParams, "payment");
+  const awaitingConfirmation = isGuest && paymentResult === "success" &&
     booking.payments.some((payment) => payment.status === "PENDING" && payment.providerPaymentId);
   return (
     <>
@@ -137,9 +139,10 @@ export default async function BookingDetailsPage({
         </section>
         <aside className="product-panel">
           <h2>{demo ? common.labels.demoBooking : common.nav.payments}</h2>
-          <p className="product-notice">{demo ? common.labels.demoBookingHint : common.labels.paymentPending}</p>
+          {(demo || canPay) && <p className="product-notice">{demo ? common.labels.demoBookingHint : common.labels.paymentPending}</p>}
           {canPay && <p className="payment-line"><span>Finik Pay</span><strong><Money amount={FINIK_PAYMENT_AMOUNT} locale={locale} common={common} /></strong></p>}
-          {!demo && isGuest && <FinikPayment bookingId={booking.id.toString()} locale={locale} common={common} canPay={canPay} awaitingConfirmation={awaitingConfirmation} />}
+          {paymentEligible && !canPay && <p className="form-hint" role="status">{common.labels.paymentProviderUnavailable} <a className="text-link" href="#site-contact">{common.labels.contact}</a></p>}
+          {isGuest && (canPay || awaitingConfirmation) && <FinikPayment bookingId={booking.id.toString()} locale={locale} common={common} canPay={canPay} awaitingConfirmation={awaitingConfirmation} initialError={paymentEligible && paymentResult === "failed" ? common.errors.paymentFailed : null} />}
           {booking.payments.map((payment) => (
             <div className="payment-line" key={payment.id.toString()}>
               <Money amount={payment.amount.toString()} locale={locale} common={common} />

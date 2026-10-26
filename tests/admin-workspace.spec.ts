@@ -10,7 +10,7 @@ test.describe.configure({ mode: "serial" });
 const connection = new URL(process.env.E2E_DATABASE_URL!), schema = connection.searchParams.get("schema")!;
 if (!/^aframe_qa_[a-f0-9]{12}$/.test(schema)) throw new Error("Admin QA requires an isolated schema.");
 const pool = new Pool({ connectionString: connection.toString(), options: `-c search_path=${schema}` });
-const prefix = `admin-workspace-${randomBytes(4).toString("hex")}`, base = `http://localhost:${process.env.E2E_PORT || 3127}`;
+const prefix = `admin-workspace-${randomBytes(4).toString("hex")}`, base = `http://localhost:${process.env.E2E_PORT || 3107}`;
 const start = addDays(bishkekToday(), 10), end = addDays(start, 2);
 let cabin: string, guest: string, superAdmin: string, booking: string;
 
@@ -25,8 +25,15 @@ async function confirm(page: Page, form: Locator) {
   await page.locator("dialog[open]").getByRole("button", { name: "Confirm", exact: true }).click();
 }
 async function dateField(page: Page, form: Locator, name: string, value: string) {
+  const calendar = page.locator(".premium-calendar-popover");
+  // Let the previous single-date popover finish restoring focus before opening another.
+  await expect(calendar).toHaveCount(0);
   await form.locator(`.product-field:has(input[name='${name}']) .premium-date-trigger`).click();
+  await expect(calendar).toBeVisible();
+  await expect(calendar).toHaveAttribute("data-state", "open");
   await chooseDay(page, value);
+  await expect(form.locator(`input[name='${name}']`)).toHaveValue(value);
+  await expect(calendar).toHaveCount(0);
 }
 test.beforeAll(async () => {
   const hash = (await pool.query("SELECT password_hash FROM users WHERE id=$1", [process.env.QA_ADMIN_ID])).rows[0].password_hash;
@@ -138,7 +145,7 @@ test("booking transitions, overlap constraint and cancellation free the same pub
   expect(stored.total_amount).toBe("3000.00"); expect(stored.discount_amount).toBe("1000.00");
   expect((await pool.query("SELECT count(*)::int AS count FROM notifications WHERE booking_id=$1 AND user_id=$2 AND type='booking.created'", [booking, process.env.QA_ADMIN_ID])).rows[0].count).toBe(1);
   await guestContext.close();
-  await expect(pool.query("INSERT INTO bookings(booking_number,user_id,cabin_id,check_in,check_out,guests_count,guest_name,guest_phone,price_per_night,nights,subtotal,total_amount,updated_at) VALUES($1,$2,$3,$4,$5,2,'Conflict','+996555000000',2000,2,4000,4000,NOW())", [`OVERLAP-${prefix}`, guest, cabin, start, end])).rejects.toMatchObject({ code: "23P01" });
+  await expect(pool.query("INSERT INTO bookings(booking_number,user_id,cabin_id,check_in,check_out,guests_count,guest_name,guest_phone,price_per_night,nights,subtotal,total_amount,updated_at) VALUES($1,$2,$3,$4,$5,2,'Conflict','+996555000000',2000,2,4000,4000,NOW())", [`OVERLAP-${randomBytes(6).toString("hex")}`, guest, cabin, start, end])).rejects.toMatchObject({ code: "23P01" });
   await page.goto(`/en/admin/bookings?q=${encodeURIComponent(prefix)}`);
   await page.locator(".admin-row-details > summary").click();
   const moderation = page.locator(".admin-row-actions form").first();

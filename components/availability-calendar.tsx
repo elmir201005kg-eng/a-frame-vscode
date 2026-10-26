@@ -19,7 +19,8 @@ export function AvailabilityCalendar({
   const { text } = useFormDesign(locale);
   const mode = selectionMode ?? (checkIn && !checkOut ? "end" : "start");
   const candidate = mode === "end" ? checkOut : checkIn;
-  const origin = isDateOnly(candidate) ? candidate : (mode === "end" && isDateOnly(checkIn) ? addDays(checkIn, 1) : minDate);
+  const fallback = today < minDate ? minDate : maxDate && today > maxDate ? maxDate : today;
+  const origin = isDateOnly(candidate) ? candidate : (mode === "end" && isDateOnly(checkIn) ? addDays(checkIn, 1) : fallback);
   const [monthValue, setMonthValue] = useState(() => (origin || today).slice(0, 7) + "-01");
   const [focused, setFocused] = useState(origin || today);
   const grid = useRef<HTMLDivElement>(null);

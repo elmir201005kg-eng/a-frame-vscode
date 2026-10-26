@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/image";
 import Link from "@/components/navigation-link";
 import { ActionForm } from "@/components/action-form";
 import { PhotoUpload } from "@/components/photo-upload";

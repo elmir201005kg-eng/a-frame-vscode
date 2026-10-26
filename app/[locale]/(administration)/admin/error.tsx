@@ -1,5 +1,5 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/client/router";
 import { AlertCircle } from "lucide-react";
 import ru from "@/app/i18n/locales/ru/admin.json";
 import kg from "@/app/i18n/locales/kg/admin.json";

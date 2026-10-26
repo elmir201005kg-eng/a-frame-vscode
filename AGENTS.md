@@ -1,9 +1,8 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# React / Vite
 
-## This is NOT the Next.js you know
+This project uses React 19 and Vite, without Next.js. Read `docs/react-migration.md` for its server, routing, sessions and build structure.
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+- Preserve server/client boundaries: database access and credentials belong on the server; interactive components use `"use client"` and server functions use `"use server"`.
+- Use `npm run dev`, `npm run build` and `npm start`. Build artifacts belong in `dist`; `BUILD_DIR` selects a separate build directory.
+- Run `npm run typecheck`, `npm run lint` and the tests appropriate to the change. Database browser tests require the isolated schemas created by the QA scripts.
+- `@vitejs/plugin-rsc` uses experimental React APIs. Keep its pinned version compatible with React and Vite when updating dependencies.

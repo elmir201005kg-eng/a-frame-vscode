@@ -18,5 +18,5 @@ export function redactContacts(value: string) {
 
 export function safeChatHref(href: string, locale: Locale) {
   // Only routes actually exposed by the public application. No model-generated URLs.
-  return new RegExp(`^/${locale}(?:#(?:faq|how-it-works)|/(?:catalog|account|login|register)(?:\\?tab=favorites)?|/cabins/[a-zA-Z0-9_-]+)?$`).test(href);
+  return new RegExp(`^/${locale}(?:#faq|/(?:catalog|account|login|register|destinations|how-it-works)(?:\\?tab=favorites)?|/cabins/[a-zA-Z0-9_-]+)?$`).test(href);
 }

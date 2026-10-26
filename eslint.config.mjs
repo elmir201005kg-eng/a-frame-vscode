@@ -1,10 +1,10 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
+  ...tseslint.configs.recommended,
+  { files: ["**/*.{ts,tsx}"], plugins: { "react-hooks": reactHooks }, rules: { ...reactHooks.configs.recommended.rules, "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }] } },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -14,8 +14,12 @@ const eslintConfig = defineConfig([
     ".next-e2e-production/**",
     "out/**",
     "build/**",
+    "dist*/**",
     "generated/prisma/**",
     ".npm-cache/**",
+    "test-results*/**",
+    "pwa-test-results/**",
+    "playwright-report/**",
     "next-env.d.ts",
   ]),
 ]);

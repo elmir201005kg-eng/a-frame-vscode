@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "@/server/cache";
 import { db } from "@/lib/db";
 import { adminActor, adminAudit, adminError } from "@/lib/admin-policy";
 import { lockCabin } from "@/lib/booking";
