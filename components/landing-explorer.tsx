@@ -37,7 +37,7 @@ export async function LandingExplorer({
     data = { refs, results, authenticated: Boolean(user) };
   } catch (error) {
     if (!isDatabaseUnavailable(error)) throw error;
-    console.warn(`[landing] Cabins unavailable (${error.code}). Check DATABASE_URL and database connectivity.`);
+    console.warn(`[landing] Cabins unavailable (${error.code ?? error.message}). Check DATABASE_URL and database connectivity.`);
   }
   const search = dictionary.search,
     catalog = dictionary.catalog;

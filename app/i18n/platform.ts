@@ -39,7 +39,7 @@ const overridesFor = cache(async (locale: Locale) => {
     // Database overrides are optional; the versioned JSON dictionaries remain usable.
     // Schema, validation and programming errors must still reach the error boundary.
     if (!isDatabaseUnavailable(error)) throw error;
-    console.warn(`[i18n] Database overrides unavailable (${error.code}); using ${locale} JSON dictionaries. Check database connectivity.`);
+    console.warn(`[i18n] Database overrides unavailable (${error.code ?? error.message}); using ${locale} JSON dictionaries. Check database connectivity.`);
     return [];
   }
 });

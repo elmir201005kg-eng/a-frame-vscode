@@ -4,6 +4,34 @@ import { cookies, withRequest } from "@/server/context";
 import { cachedPublic, updateTag } from "@/server/cache";
 import { redirect, redirectExternal } from "@/server/navigation";
 import { readLimitedBody, PayloadTooLarge } from "@/server/body";
+import { isDatabaseUnavailable } from "@/lib/db-errors";
+import { Prisma } from "@/generated/prisma/client";
+
+test("database availability recognizes pg pool timeouts and Prisma connection errors", () => {
+  const timeout = new Error("Connection terminated due to connection timeout", {
+    cause: new Error("Connection terminated unexpectedly"),
+  });
+  Object.assign(timeout, { clientVersion: "7.10.0" });
+  assert.equal(isDatabaseUnavailable(timeout), true);
+  assert.equal(isDatabaseUnavailable(new Error("timeout exceeded when trying to connect")), true);
+  assert.equal(isDatabaseUnavailable(timeout.cause), true);
+  for (const code of ["ENOTFOUND", "EAI_AGAIN"])
+    assert.equal(isDatabaseUnavailable(Object.assign(new Error(`getaddrinfo ${code} db.invalid`), { code, syscall: "getaddrinfo" })), true);
+  for (const code of ["P1001", "P1002", "P1008", "P1017", "P2024"])
+    assert.equal(isDatabaseUnavailable(new Prisma.PrismaClientKnownRequestError("Connection unavailable", { code, clientVersion: "7.10.0" })), true);
+});
+
+test("database availability leaves schema, validation and programming errors visible", () => {
+  for (const code of ["P1000", "P1011", "P2002", "P2021", "P2022"])
+    assert.equal(isDatabaseUnavailable(new Prisma.PrismaClientKnownRequestError("Connection terminated unexpectedly", { code, clientVersion: "7.10.0" })), false);
+  assert.equal(isDatabaseUnavailable(new Prisma.PrismaClientValidationError("Invalid query", { clientVersion: "7.10.0" })), false);
+  assert.equal(isDatabaseUnavailable(new TypeError("Cannot read properties of undefined")), false);
+  assert.equal(isDatabaseUnavailable(new Error("Query failed: connection timeout")), false);
+  assert.equal(isDatabaseUnavailable({ code: "P1001", message: "Connection unavailable" }), false);
+  assert.equal(isDatabaseUnavailable(Object.assign(new Error("query failed"), { code: "42P01" })), false);
+  assert.equal(isDatabaseUnavailable({ code: "ENOTFOUND", message: "getaddrinfo ENOTFOUND db.invalid" }), false);
+  assert.equal(isDatabaseUnavailable(null), false);
+});
 
 test("concurrent requests keep session cookies isolated and preserve multiple Set-Cookie headers", async () => {
   let release!: () => void;

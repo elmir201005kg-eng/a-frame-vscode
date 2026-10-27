@@ -1,4 +1,11 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+
+/* Watch application code for utilities, without scanning docs or QA artifacts. */
+@source "./**/*.{ts,tsx}";
+@source "../components/**/*.{ts,tsx}";
+@source "../client/**/*.{ts,tsx}";
+@source "../server/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
 
 /* Install controls and the offline home use the same colors as the site. */
 .pwa-install { position: fixed; z-index: 80; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 40px); padding: 8px; border: 1px solid var(--line-strong); border-radius: 16px; background: var(--card); box-shadow: 0 12px 36px rgb(0 0 0 / 30%); }

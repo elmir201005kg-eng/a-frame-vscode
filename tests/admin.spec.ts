@@ -49,6 +49,8 @@ test("ADMIN sees exact database aggregates, revenue exclusions, search, filters 
   await session(context, process.env.QA_ADMIN_ID!);
   await page.goto("/ru/admin");
   await expect(page.locator(".admin-shell")).toBeVisible();
+  await expect(page).toHaveTitle("Admin · A-FRAME KG");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex,nofollow");
   await expect(page.locator(".site-header, .site-footer")).toHaveCount(0);
   await expect(page.locator('[data-stat="bookings"]')).toHaveText("8");
   await expect(page.locator('[data-stat="revenue"]')).toContainText("4");

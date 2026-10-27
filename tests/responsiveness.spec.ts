@@ -189,3 +189,23 @@ test("unconfigured Google login shows a retryable error without prefetching OAut
   await expect(page.locator('.google-auth-button')).toBeEnabled();
   expect(starts).toBe(1);
 });
+
+test("AI consultant includes the current cabin in every locale and normalized development URL", async ({ page }) => {
+  test.setTimeout(120000);
+  const errors = monitor(page);
+  await page.route("**/api/ai/chat", route => route.fulfill({
+    json: { message: "QA cabin context received", mode: "faq", links: [] },
+  }));
+  for (const locale of ["ru", "kg", "en"] as const) {
+    await page.goto(`/${locale}/cabins/qa-cabin-1`);
+    await page.locator("[data-ai-widget] .af-ai-launcher").click();
+    const dialog = page.locator("#a-frame-ai-chat");
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("textbox").fill("Tell me about this cabin");
+    const request = page.waitForRequest(request => new URL(request.url()).pathname === "/api/ai/chat" && request.method() === "POST");
+    await dialog.locator("button[type='submit']").click();
+    expect((await request).postDataJSON()).toMatchObject({ locale, cabinSlug: "qa-cabin-1" });
+    await expect(dialog.getByRole("log")).toContainText("QA cabin context received");
+  }
+  expect(errors).toEqual([]);
+});

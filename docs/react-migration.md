@@ -17,6 +17,20 @@ Next.js удалён из зависимостей. `npm run dev` запуска
 
 Результат сборки хранится в `dist/client`, `dist/rsc` и `dist/ssr`. Для независимой проверочной сборки можно задать `BUILD_DIR=dist-qa`; ту же переменную нужно передать при запуске сервера. Автоматические тесты используют `E2E_PRODUCTION_DIR` для выбора уже готовой сборки.
 
+## Vercel
+
+`vercel.json` выбирает Framework Preset **Other** (`framework: null`), выполняет `npm ci` и полный `npm run build` (включая генерацию Prisma и PWA). В Vercel сборка всегда использует `dist`; `BUILD_DIR` остаётся доступен для независимых локальных сборок.
+
+Публикуется только `dist/client`. Файла `index.html` в корне этой сборки нет: HTML формируется сервером. После проверки статических файлов все URL направляются в одну Node.js-функцию `api/index.mjs`. Она экспортирует Web Standard `fetch` из `dist/rsc/index.js`, сохраняя исходный URL, HTTP-метод, query string, тело, заголовки RSC/Origin, cookie и потоковый ответ. `server/start.mjs` используется только при `npm start` на собственном сервере; Vercel самостоятельно управляет HTTP listener. Перенаправление всех URL на статический `index.html` здесь неприменимо.
+
+`dist/rsc` и `dist/ssr` включены в функцию, а не в публичный каталог. Прямой импорт скомпилированной точки входа позволяет Vercel проследить зависимости Prisma/PostgreSQL и Sharp. `public/images` и `public/brand` также входят в функцию: `/api/image` и генерация иконок читают эти файлы с диска. Хешированные `/assets/*` кешируются надолго; service worker всегда перепроверяется. Три `/kg/offline`, `/ru/offline`, `/en/offline` обслуживаются из соответствующих сгенерированных HTML.
+
+В Environment Variables Vercel задайте серверный `DATABASE_URL` с доступом к PostgreSQL, TLS и подходящим пулером, `APP_URL=https://ваш-домен` и используемые секреты Google OAuth, Telegram, `ADMIN_OTP_SECRET` и Finik. Они не должны иметь префикс `VITE_`. Миграции существующей БД выполняются отдельно через `npm run db:deploy`; сборка не меняет данные. Сессии продолжают храниться в PostgreSQL. Локальный `UPLOAD_DIR` требует долговечного хранилища: файловая система Vercel не предназначена для сохранения загруженных фотографий между вызовами.
+
+Проверка перед повторным deploy: `npm run build`, `npm run test:deployment`, `npm run typecheck`, `npm run lint`, `npm run test:runtime`. `test:deployment` вызывает именно production-функцию Vercel, проверяет три языка, SSR/RSC, API, защиту Origin, закрытые маршруты, изображения и клиентские файлы без записи в БД. Полные проверки входа и базы запускаются через QA-скрипты с отдельными временными схемами PostgreSQL.
+
+В `app/globals.css` поиск классов Tailwind ограничен файлами TypeScript и TSX в `app`, `components`, `client`, `server` и `lib`. Документация, тесты и результаты проверок не участвуют в генерации CSS и регистрации её файловых зависимостей. При добавлении нового каталога с компонентами добавьте его через `@source`.
+
 Старые процессы Next.js остановлены; `.next` и `.next-*` очищены. Команда `npm run clean:legacy` повторяет безопасную очистку только этих каталогов внутри проекта. Переменные `NEXTAUTH_URL` и `NEXT_PUBLIC_APP_URL` пока принимаются серверной интеграцией Finik для совместимости с существующими настройками; новые установки могут использовать `APP_URL`.
 
 Проверки: `npm run typecheck`, `npm run lint`, `npm run test:runtime`, `npm run test:admin`, `npm run test:finik`, `npm run test:ai`, `npm run test:pwa`. Браузерные проверки входа, администрирования, галереи и тестового checkout используют отдельные временные схемы PostgreSQL. В `test:admin` включены проверки переходов без перезагрузки, прерывания зависшего перехода и повторной загрузки после тайм-аута (`tests/admin-navigation.spec.ts`).

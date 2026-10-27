@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import RootLayout from "@/app/[locale]/layout";
 import PlatformLayout from "@/app/[locale]/(platform)/layout";
-import AdminLayout from "@/app/[locale]/(administration)/admin/layout";
+import AdminLayout, { metadata as adminMetadata } from "@/app/[locale]/(administration)/admin/layout";
 import NotFound from "@/app/[locale]/not-found";
 import { requireAdmin } from "@/lib/auth";
 import { isLocale, localeCookie, preferredLocale } from "@/app/i18n/config";
@@ -86,7 +86,8 @@ export async function renderPage(url: URL, locale: string) {
     if (!route) throw new NavigationResponse(404);
     const module = await route.load();
     if (route.file.includes("(administration)")) await requireAdmin(locale as "kg" | "ru" | "en");
-    metadata = module.generateMetadata ? await module.generateMetadata(props) : module.metadata || {};
+    const pageMetadata = module.generateMetadata ? await module.generateMetadata(props) : module.metadata || {};
+    metadata = route.file.includes("(administration)") ? { ...adminMetadata, ...pageMetadata } : pageMetadata;
     content = await module.default(props);
     if (route.file.includes("(administration)")) content = await AdminLayout({ params, children: content });
     else if (route.file.includes("(platform)")) content = await PlatformLayout({ params, children: content });

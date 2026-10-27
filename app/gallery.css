@@ -24,7 +24,7 @@
 .photo-viewer-content { width: 100%; }
 .photo-viewer-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; font-size: 13px; }
 .photo-viewer button { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--line-strong); border-radius: 50%; background: rgb(11 18 15 / 85%); color: var(--foreground); }
-.photo-viewer-stage { position: relative; max-height: 65dvh; background: #050907; }
+.photo-viewer-stage { position: relative; max-height: 65dvh; margin-inline: auto; background: #050907; }
 .photo-viewer-stage img { object-fit: contain; }
 .photo-viewer-previous, .photo-viewer-next { position: absolute; z-index: 1; top: 50%; transform: translateY(-50%); }
 .photo-viewer-previous { left: 12px; }

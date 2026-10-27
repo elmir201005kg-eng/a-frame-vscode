@@ -73,6 +73,24 @@ test("gallery: cabin viewer changes photos and restores scrolling", async ({ pag
   expect(await page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
 });
 
+test("gallery: a related cabin starts with its own first photo during client navigation", async ({ page }) => {
+  let documents = 0;
+  page.on("request", request => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents++;
+  });
+  await page.goto("/ru/cabins/qa-cabin-1");
+  await page.locator(".property-gallery-thumbs button").nth(1).click();
+  await expect(page.locator(".property-gallery-main img")).toHaveAttribute("src", /story/);
+  const initialDocuments = documents;
+  const related = page.locator(".similar-cabins .cabin-title").first();
+  const href = await related.getAttribute("href");
+  await related.click();
+  await expect(page).toHaveURL(new RegExp(`${href}$`));
+  await expect(page.locator(".property-gallery-main img")).toHaveAttribute("src", /hero/);
+  await expect(page.locator(".property-gallery-open")).toContainText("1 / 1");
+  expect(documents).toBe(initialDocuments);
+});
+
 test("gallery: localized pages and legal footer fit phone, tablet and desktop", async ({ page }, testInfo) => {
   test.setTimeout(120000);
   const errors: string[] = [];

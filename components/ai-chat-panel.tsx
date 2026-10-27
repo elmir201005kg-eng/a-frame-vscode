@@ -7,6 +7,8 @@ import { aiText } from "@/app/i18n/ai";
 import { Icon } from "@/components/icon";
 import { AI_HISTORY_LIMIT, AI_MESSAGE_LIMIT, redactContacts, safeChatHref, type ChatMessage, type ChatReply } from "@/lib/ai/shared";
 import { CabinAssistantMark } from "./ai-mark";
+import { usePathname } from "@/client/router";
+import { isLocale } from "@/app/i18n/config";
 
 const storagePrefix = "a-frame-ai-v1:";
 const savedLimit = 20;
@@ -27,6 +29,7 @@ function restore(locale: Locale): ChatMessage[] {
 }
 
 export function AiChatPanel({ locale, onClose }: { locale: Locale; onClose: () => void }) {
+  const pathname = usePathname();
   // This panel is loaded with ssr:false. Storage is read exactly once, never during server rendering.
   const [messages, setMessages] = useState<ChatMessage[]>(() => restore(locale));
   const [draft, setDraft] = useState("");
@@ -73,8 +76,9 @@ export function AiChatPanel({ locale, onClose }: { locale: Locale; onClose: () =
     if (!retry) setMessages(current => [...current, { role: "user" as const, content }].slice(-savedLimit));
     const timeout = window.setTimeout(() => controller.abort("timeout"), 100000);
     try {
-      const parts = window.location.pathname.split("/");
-      const cabinSlug = parts[2] === "cabins" && /^[a-zA-Z0-9_-]{1,255}$/.test(parts[3] || "") ? parts[3] : undefined;
+      const parts = pathname.split("/").filter(Boolean);
+      if (isLocale(parts[0])) parts.shift();
+      const cabinSlug = parts[0] === "cabins" && /^[a-zA-Z0-9_-]{1,255}$/.test(parts[1] || "") ? parts[1] : undefined;
       const history = messages.filter(item => item.role === "user").slice(-(AI_HISTORY_LIMIT / 2));
       // Retrying keeps the original question as a single message.
       if (retry && history.at(-1)?.content === content) history.pop();

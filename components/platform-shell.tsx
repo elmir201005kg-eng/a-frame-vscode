@@ -11,14 +11,26 @@ import type { LandingDictionary } from "@/app/i18n/dictionaries";
 import { translated, type CommonDictionary } from "@/app/i18n/platform";
 import { getUser } from "@/lib/auth";
 import { favoriteIds } from "@/lib/catalog";
+import { isDatabaseUnavailable } from "@/lib/db-errors";
+
+async function headerAccount() {
+  try {
+    const user = await getUser();
+    return { user, favoriteCount: user ? (await favoriteIds(user.id)).length : 0 };
+  } catch (error) {
+    if (!isDatabaseUnavailable(error)) throw error;
+    console.warn(`[header] Account unavailable (${error.code ?? error.message}); showing the public navigation.`);
+    return { user: null, favoriteCount: 0 };
+  }
+}
 
 export async function PlatformHeader({ locale }: { locale: Locale }) {
-  const [dictionary, user, common] = await Promise.all([
+  const [dictionary, account, common] = await Promise.all([
     translated<LandingDictionary>(locale, "landing"),
-    getUser(),
+    headerAccount(),
     translated<CommonDictionary>(locale, "common"),
   ]);
-  const favoriteCount = user ? (await favoriteIds(user.id)).length : 0;
+  const { user, favoriteCount } = account;
   return (
     <SiteHeader
       locale={locale}

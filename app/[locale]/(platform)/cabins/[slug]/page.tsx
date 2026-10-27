@@ -116,7 +116,7 @@ export default async function CabinPage({
           authenticated={Boolean(user)}
         />
       </div>
-      <CabinGallery images={cabin.images} common={common} demo={cabin.isDemo} locale={locale} />
+      <CabinGallery key={cabin.id} images={cabin.images} common={common} demo={cabin.isDemo} locale={locale} />
       {cabin.categories.length > 0 && <div className="property-amenities" aria-label={common.nav.categories}>{cabin.categories.map(category => <span key={category.id}><Icon name="check" />{category.name}</span>)}</div>}
       {cabin.isDemo && <p className="product-notice">{common.labels.demoHint}</p>}
       <div className="property-detail-layout">

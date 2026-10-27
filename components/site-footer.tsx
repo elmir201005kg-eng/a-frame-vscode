@@ -259,7 +259,6 @@ export async function SiteFooter({
             href={CONTACT.map}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Открыть адрес в 2ГИС"
           >
             <Icon name="pin" size={16} />
 
