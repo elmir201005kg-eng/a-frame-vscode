@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.10.0": true,
+    "esbuild@0.28.2": true,
+    "prisma@7.10.0": true
+  },
   "scripts": {
     "dev": "vite --configLoader runner --port 3001",
     "prebuild": "prisma generate && node scripts/generate-pwa-icons.mjs",
@@ -16,6 +24,7 @@
     "audit:database": "node --conditions=react-server --import tsx scripts/database-audit.mjs",
     "test:auth": "playwright test",
     "test:runtime": "node --conditions=react-server --import tsx --test tests/runtime.test.ts",
+    "test:dependencies": "node --test tests/dependencies.test.mjs",
     "test:admin": "node scripts/admin-qa.mjs",
     "test:finik": "node --conditions=react-server --import tsx --test tests/finik.test.ts",
     "test:demo-checkout": "node scripts/demo-checkout-qa.mjs",
@@ -44,12 +53,14 @@
     "dotenv": "18.0.7",
     "google-auth-library": "^11.3.0",
     "lucide-react": "^1.56.0",
+    "node-domexception": "file:./packages/native-domexception",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-server-dom-webpack": "19.3.0",
     "rsc-html-stream": "0.0.8",
     "server-only": "0.0.1",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "uuid": "file:./packages/native-uuid"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
@@ -60,7 +71,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "10.9.1",
     "typescript-eslint": "^8",
     "eslint-plugin-react-hooks": "^7",
     "pg": "^8.23.1",
@@ -69,5 +80,13 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vite": "8.3.5"
+  },
+  "overrides": {
+    "node-jose": {
+      "uuid": "$uuid"
+    },
+    "fetch-blob": {
+      "node-domexception": "$node-domexception"
+    }
   }
 }

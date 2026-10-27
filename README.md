@@ -21,7 +21,9 @@
 
 Основные команды: `npm run lint`, `npx tsc --noEmit`, `npm run test:finik`, `npm run test:ai`, `npm run build`. Проверки авторизации и административных сценариев используют отдельную тестовую БД; настройки описаны в соответствующих документах и QA-скриптах.
 
-Production: `npm run build`, затем `npm start` (порт 3001; другой порт: `npm start -- --port 4000`). Нужен Node.js 22.12+ или 24. Старые каталоги `.next` и `.next-*` больше не используются; их можно очистить командой `npm run clean:legacy` после остановки старого сервера Next.js. Исходники и база данных этой командой не затрагиваются.
+Production: `npm run build`, затем `npm start` (порт 3001; другой порт: `npm start -- --port 4000`). Нужен Node.js 22.13+ в ветке 22 или 24+. Старые каталоги `.next` и `.next-*` больше не используются; их можно очистить командой `npm run clean:legacy` после остановки старого сервера Next.js. Исходники и база данных этой командой не затрагиваются.
+
+Предупреждения установки в Vercel и совместимость зависимостей: [docs/build-dependencies.md](docs/build-dependencies.md).
 
 Результаты анализа и очистки: [docs/project-audit.md](docs/project-audit.md).
 

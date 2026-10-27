@@ -1,0 +1,10 @@
+{
+  "name": "@a-frame/native-domexception",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "index.cjs",
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  }
+}
