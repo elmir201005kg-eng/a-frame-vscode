@@ -14,7 +14,8 @@ export function publicCabinWhere(extra: Prisma.CabinWhereInput = {}): Prisma.Cab
         status: "PUBLISHED",
         owner: { verificationStatus: "VERIFIED", user: { isActive: true, role: "OWNER" } },
         location: { region: { isActive: true } },
-        ...(!demoModeEnabled() ? { isDemo: false } : {}),
+        // Non-bookable concepts are safe to show in the production catalog.
+        ...(!demoModeEnabled() ? { OR: [{ isDemo: false }, { isBookable: false }] } : {}),
       },
       extra,
     ],
@@ -33,8 +34,8 @@ export type CabinRecord = Prisma.CabinGetPayload<{ include: typeof cabinInclude 
 export const cabinCardSelect = {
   id: true, slug: true, title: true, titleKg: true, titleEn: true,
   description: true, descriptionKg: true, descriptionEn: true,
-  pricePerNight: true, maxGuests: true, bedrooms: true, rating: true, reviewsCount: true, isDemo: true,
-  location: { select: { city: true, village: true, region: { select: { name: true, nameKg: true, nameEn: true } } } },
+  pricePerNight: true, maxGuests: true, bedrooms: true, rating: true, reviewsCount: true, isDemo: true, isBookable: true,
+  location: { select: { city: true, cityKg: true, cityEn: true, village: true, villageKg: true, villageEn: true, region: { select: { name: true, nameKg: true, nameEn: true } } } },
   images: { select: { id: true, imageUrl: true, altText: true }, orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }], take: 1 },
   amenities: { where: { amenity: { isActive: true } }, select: { amenityId: true, amenity: { select: { name: true, nameKg: true, nameEn: true, slug: true } } }, take: 3, orderBy: { amenityId: "asc" } },
 } satisfies Prisma.CabinSelect;
@@ -44,9 +45,9 @@ export function cabinCardDto(cabin: Prisma.CabinGetPayload<{ select: typeof cabi
     id: cabin.id.toString(), slug: cabin.slug,
     title: (locale === "kg" ? cabin.titleKg : locale === "en" ? cabin.titleEn : null) || cabin.title,
     description: (locale === "kg" ? cabin.descriptionKg : locale === "en" ? cabin.descriptionEn : null) || cabin.description,
-    location: [localizedName(cabin.location.region, locale), cabin.location.city || cabin.location.village].filter(Boolean).join(" · "),
+    location: [localizedName(cabin.location.region, locale), localizedSettlement(cabin.location, locale)].filter(Boolean).join(" · "),
     price: Number(cabin.pricePerNight), maxGuests: cabin.maxGuests, bedrooms: cabin.bedrooms,
-    rating: Number(cabin.rating), reviewsCount: cabin.reviewsCount, isDemo: cabin.isDemo,
+    rating: Number(cabin.rating), reviewsCount: cabin.reviewsCount, isDemo: cabin.isDemo, isBookable: cabin.isBookable,
     images: cabin.images.map(image => ({ id: image.id.toString(), src: image.imageUrl, alt: image.altText || cabin.title })),
     amenities: cabin.amenities.map(item => ({ id: item.amenityId, slug: item.amenity.slug, name: localizedName(item.amenity, locale) })),
     favorite: favorites.includes(cabin.id.toString()),
@@ -60,6 +61,14 @@ export function localizedName(
   locale: Locale,
 ) {
   return (locale === "kg" ? value.nameKg : locale === "en" ? value.nameEn : null) || value.name;
+}
+export function localizedSettlement(value: {
+  city: string | null; cityKg?: string | null; cityEn?: string | null;
+  village: string | null; villageKg?: string | null; villageEn?: string | null;
+}, locale: Locale) {
+  return value.city
+    ? (locale === "kg" ? value.cityKg : locale === "en" ? value.cityEn : null) || value.city
+    : (locale === "kg" ? value.villageKg : locale === "en" ? value.villageEn : null) || value.village;
 }
 export function cabinDto(cabin: CabinRecord, locale: Locale, favorites: string[] = []) {
   return {
@@ -75,11 +84,11 @@ export function cabinDto(cabin: CabinRecord, locale: Locale, favorites: string[]
     regionSlug: cabin.location.region.slug,
     location: [
       localizedName(cabin.location.region, locale),
-      cabin.location.city || cabin.location.village,
+      localizedSettlement(cabin.location, locale),
     ]
       .filter(Boolean)
       .join(" · "),
-    address: cabin.location.address,
+    address: (locale === "kg" ? cabin.location.addressKg : locale === "en" ? cabin.location.addressEn : null) || cabin.location.address,
     price: Number(cabin.pricePerNight),
     maxGuests: cabin.maxGuests,
     bedrooms: cabin.bedrooms,
@@ -89,6 +98,7 @@ export function cabinDto(cabin: CabinRecord, locale: Locale, favorites: string[]
     reviewsCount: cabin.reviewsCount,
     status: cabin.status,
     isDemo: cabin.isDemo,
+    isBookable: cabin.isBookable,
     images: cabin.images.map((image) => ({
       id: image.id.toString(),
       src: image.imageUrl,
@@ -101,7 +111,10 @@ export function cabinDto(cabin: CabinRecord, locale: Locale, favorites: string[]
         slug: item.amenity.slug,
         name: localizedName(item.amenity, locale),
       })),
-    rules: cabin.rules.map((rule) => ({ title: rule.title, description: rule.description })),
+    rules: cabin.rules.map((rule) => ({
+      title: (locale === "kg" ? rule.titleKg : locale === "en" ? rule.titleEn : null) || rule.title,
+      description: (locale === "kg" ? rule.descriptionKg : locale === "en" ? rule.descriptionEn : null) || rule.description,
+    })),
     owner: {
       name:
         cabin.owner.businessName ||
@@ -169,6 +182,8 @@ export async function searchCabins(params: SearchParams, locale: Locale, userId?
         { title: { contains: q, mode: "insensitive" } },
         { titleKg: { contains: q, mode: "insensitive" } },
         { titleEn: { contains: q, mode: "insensitive" } },
+        { location: { OR: ["city", "cityKg", "cityEn", "village", "villageKg", "villageEn", "address", "addressKg", "addressEn"]
+          .map(key => ({ [key]: { contains: q, mode: "insensitive" } })) } },
         {
           location: {
             region: {

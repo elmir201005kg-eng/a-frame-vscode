@@ -2,7 +2,7 @@ import "server-only";
 import type { Locale } from "@/app/i18n/config";
 import { aiText } from "@/app/i18n/ai";
 import { db } from "@/lib/db";
-import { localizedName, publicCabinWhere } from "@/lib/catalog";
+import { localizedName, localizedSettlement, publicCabinWhere } from "@/lib/catalog";
 import { quoteStay } from "@/lib/booking";
 import { InputError } from "@/lib/validation";
 import { FINIK_PAYMENT_AMOUNT } from "@/lib/finik-config";
@@ -59,9 +59,9 @@ export async function loadKnowledge(input: ChatInput): Promise<Knowledge> {
       id: true, slug: true, title: true, titleKg: true, titleEn: true,
       description: true, descriptionKg: true, descriptionEn: true,
       pricePerNight: true, maxGuests: true, checkInTime: true, checkOutTime: true, cancellationHours: true, isDemo: true,
-      location: { select: { address: true, city: true, village: true, region: { select: { name: true, nameKg: true, nameEn: true } } } },
+      location: { select: { address: true, addressKg: true, addressEn: true, city: true, cityKg: true, cityEn: true, village: true, villageKg: true, villageEn: true, region: { select: { name: true, nameKg: true, nameEn: true } } } },
       amenities: { where: { amenity: { isActive: true } }, select: { amenity: { select: { name: true, nameKg: true, nameEn: true } } }, take: 12 },
-      rules: { where: { isActive: true }, select: { title: true, description: true }, take: 6 },
+      rules: { where: { isActive: true }, select: { title: true, titleKg: true, titleEn: true, description: true, descriptionKg: true, descriptionEn: true }, take: 6 },
     } as const;
     let rows = await db.cabin.findMany({ where: publicCabinWhere(input.cabinSlug ? { slug: input.cabinSlug } : matching), select, take: 4, orderBy: { id: "desc" } });
     // An explicit cabin context must never silently turn into a different cabin.
@@ -74,11 +74,14 @@ export async function loadKnowledge(input: ChatInput): Promise<Knowledge> {
       facts.push({ id: `cabin-${row.id}`, kind: "cabin", link, text: [
         title, ...(row.isDemo ? [t.demo] : []), description,
         `${row.pricePerNight.toFixed(2)} KGS — ${t.price}`,
-        `${t.location}: ${[localizedName(row.location.region, locale), row.location.city || row.location.village, row.location.address].filter(Boolean).join(", ")}`,
+        `${t.location}: ${[localizedName(row.location.region, locale), localizedSettlement(row.location, locale), (locale === "kg" ? row.location.addressKg : locale === "en" ? row.location.addressEn : null) || row.location.address].filter(Boolean).join(", ")}`,
         `${t.guests}: ${row.maxGuests}`,
         `${t.amenities}: ${row.amenities.map(item => localizedName(item.amenity, locale)).join(", ") || "—"}`,
         `${t.checkIn}: ${row.checkInTime}; ${t.checkOut}: ${row.checkOutTime}; ${t.cancelHours}: ${row.cancellationHours}`,
-        `${t.rules}: ${row.rules.map(rule => [rule.title, rule.description?.slice(0, 180)].filter(Boolean).join(": ")).join("; ") || "—"}`,
+        `${t.rules}: ${row.rules.map(rule => [
+          (locale === "kg" ? rule.titleKg : locale === "en" ? rule.titleEn : null) || rule.title,
+          ((locale === "kg" ? rule.descriptionKg : locale === "en" ? rule.descriptionEn : null) || rule.description)?.slice(0, 180),
+        ].filter(Boolean).join(": ")).join("; ") || "—"}`,
       ].join("\n") });
       if (!stay) continue;
       let result: string;
@@ -87,7 +90,7 @@ export async function loadKnowledge(input: ChatInput): Promise<Knowledge> {
         const quote = await quoteStay(row.id, stay.checkIn, stay.checkOut, stay.guests);
         result = `${t.available}. ${t.total}: ${quote.total.toFixed(2)} KGS.`;
       } catch (error) {
-        result = error instanceof InputError && ["datesUnavailable", "invalidGuests", "cabinUnavailable", "demoUnavailable"].includes(error.code) ? t.notAvailable : t.availabilityUnknown;
+        result = error instanceof InputError && ["datesUnavailable", "invalidGuests", "cabinUnavailable", "demoUnavailable", "cabinNotBookable"].includes(error.code) ? t.notAvailable : t.availabilityUnknown;
       }
       facts.push({ id: `availability-${row.id}`, kind: "availability", link, text: `${title}\n${t.stay}: ${stay.checkIn} → ${stay.checkOut}; ${t.guestCount}: ${stay.guests}.\n${result}\n${row.isDemo ? `${t.demo}\n` : ""}${t.availabilityNote}\n${t.stayDefaults}` });
     }

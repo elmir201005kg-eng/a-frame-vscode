@@ -26,6 +26,7 @@ export function StaySelector({
   locale,
   common,
   demo = false,
+  bookable = true,
   today,
   months,
   weekdays,
@@ -40,6 +41,7 @@ export function StaySelector({
   locale: Locale;
   common: CommonDictionary;
   demo?: boolean;
+  bookable?: boolean;
   today: string;
   months: string[];
   weekdays: string[];
@@ -58,6 +60,10 @@ export function StaySelector({
   const errorCode = code || state.code;
   const errorMessage = errorCode === "paymentProviderUnavailable" ? labels.paymentProviderUnavailable
     : common.errors[errorCode as keyof typeof common.errors] || common.errors.serverError;
+  if (!bookable) return <aside className="stay-selector product-panel">
+    <p className="stay-price"><strong>{formatNumber(price, locale)} {labels.currency}</strong><span>{labels.perNight}</span></p>
+    <p className="product-notice">{common.errors.cabinNotBookable}</p>
+  </aside>;
   const fields = (
     <>
         <input name="cabin" value={slug} type="hidden" />

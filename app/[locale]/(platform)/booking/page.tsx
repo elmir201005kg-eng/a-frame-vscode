@@ -42,6 +42,10 @@ export default async function BookingPage({
     pageDictionaries(locale, "booking"),
   ]);
   if (!record) return <ResourceUnavailable locale={locale} />;
+  if (!record.isBookable) return <>
+    <p className="product-notice">{common.errors.cabinNotBookable}</p>
+    <Link className="text-link" href={`/${locale}/cabins/${slug}`}>{common.labels.details}</Link>
+  </>;
   const cabin = cabinCardDto(record, locale);
   const start = today();
   const blocked = await blockedNights(record.id, start, new Date(`${addDays(start, 365)}T00:00:00Z`));

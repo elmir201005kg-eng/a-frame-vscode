@@ -1,3 +1,4 @@
+import "./browser-compat";
 import { createFromReadableStream, createFromFetch, setServerCallback, createTemporaryReferenceSet, encodeReply } from "@vitejs/plugin-rsc/browser";
 import { Component, use, useCallback, useEffect, useState, useTransition, type ReactNode } from "react";
 import { hydrateRoot } from "react-dom/client";

@@ -6,7 +6,7 @@ const port = Number(process.env.E2E_PORT || 3107);
 export default defineConfig({
   testDir: "./tests",
   // Offline service-worker checks have their own build and Playwright config.
-  testIgnore: ["**/pwa/**", "**/*.test.ts", "**/ai-ui/**"],
+  testIgnore: ["**/pwa/**", "**/*.test.ts", "**/ai-ui/**", "**/demo-catalog.spec.ts"],
   outputDir: process.env.E2E_OUTPUT_DIR || "test-results",
   fullyParallel: false,
   workers: 1,

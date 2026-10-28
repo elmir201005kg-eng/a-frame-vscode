@@ -50,8 +50,9 @@ export async function demoBookingAction(_: ActionState, form: FormData): Promise
     const cabinId = id(form.get("cabinId"));
     const requestKey = text(form, "requestKey", 36, 36);
     if (!/^[a-f0-9-]{36}$/.test(requestKey)) fail("invalidFields");
-    const cabin = await db.cabin.findFirst({ where: publicCabinWhere({ id: cabinId, isDemo: true }), select: { id: true } });
+    const cabin = await db.cabin.findFirst({ where: publicCabinWhere({ id: cabinId, isDemo: true }), select: { id: true, isBookable: true } });
     if (!cabin) fail("cabinUnavailable");
+    if (!cabin.isBookable) fail("cabinNotBookable");
     const requestUrl = await checkoutRequestUrl();
     const booking = await createBooking({
       userId: user.id,
@@ -111,8 +112,9 @@ export async function bookingAction(_: ActionState, form: FormData): Promise<Act
     const requestKey = text(form, "requestKey", 36, 36);
     if (!/^[a-f0-9-]{36}$/.test(requestKey)) fail("invalidFields");
     const cabinId = id(form.get("cabinId"));
-    const cabin = await db.cabin.findFirst({ where: publicCabinWhere({ id: cabinId }), select: { isDemo: true } });
+    const cabin = await db.cabin.findFirst({ where: publicCabinWhere({ id: cabinId }), select: { isDemo: true, isBookable: true } });
     if (!cabin) fail("cabinUnavailable");
+    if (!cabin.isBookable) fail("cabinNotBookable");
     const requestUrl = cabin.isDemo ? await checkoutRequestUrl() : null;
     const booking = await createBooking({
       userId: user.id,

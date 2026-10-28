@@ -15,6 +15,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ filename: 
           select: {
             status: true,
             isDemo: true,
+            isBookable: true,
             ownerId: true,
             owner: { select: { verificationStatus: true, user: { select: { isActive: true } } } },
           },
@@ -24,7 +25,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ filename: 
     if (!image) return new Response(null, { status: 404 });
     const publicImage =
       image.cabin.status === "PUBLISHED" &&
-      (!image.cabin.isDemo || demoModeEnabled()) &&
+      (!image.cabin.isDemo || !image.cabin.isBookable || demoModeEnabled()) &&
       image.cabin.owner.user.isActive &&
       image.cabin.owner.verificationStatus === "VERIFIED";
     if (!publicImage) {

@@ -20,7 +20,7 @@ const decimal = (value: number) => new Prisma.Decimal(value);
 const cabin = {
   id: BigInt(42), slug: "forest-cabin", title: "Лесной домик", titleKg: "Токой үйү", titleEn: "Forest cabin",
   description: "Домик у леса", descriptionKg: "Токойдогу үй", descriptionEn: "A cabin by the forest",
-  pricePerNight: decimal(7200), maxGuests: 4, checkInTime: "14:00", checkOutTime: "11:00", cancellationHours: 48, isDemo: false,
+  pricePerNight: decimal(7200), maxGuests: 4, checkInTime: "14:00", checkOutTime: "11:00", cancellationHours: 48, isDemo: false, isBookable: true,
   location: { address: "Тестовая улица", city: null, village: "Бостери", region: { name: "Иссык-Куль", nameKg: "Ысык-Көл", nameEn: "Issyk-Kul", isActive: true } },
   amenities: [{ amenity: { name: "Wi-Fi", nameKg: "Wi-Fi", nameEn: "Wi-Fi" } }], rules: [{ title: "Без курения", description: "Внутри не курят" }],
 };

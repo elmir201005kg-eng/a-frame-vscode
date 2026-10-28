@@ -30,6 +30,16 @@
       "continue": true
     },
     {
+      "src": "/(.*)",
+      "has": [{ "type": "header", "key": "rsc", "value": "1" }],
+      "dest": "/api/index"
+    },
+    {
+      "src": "/(.*)",
+      "methods": ["POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      "dest": "/api/index"
+    },
+    {
       "src": "/(kg|ru|en)/offline/?",
       "methods": ["GET", "HEAD"],
       "dest": "/$1/offline/index.html"

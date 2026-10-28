@@ -19,8 +19,10 @@ export async function prepareFinikPayment(userId: bigint, bookingId: bigint, cli
     await lockCabin(tx, original.cabinId);
     const booking = await tx.booking.findUniqueOrThrow({
       where: { id: bookingId },
-      include: { cabin: { select: { isDemo: true } }, payments: { orderBy: { createdAt: "desc" } } },
+      include: { cabin: { select: { isDemo: true, isBookable: true } }, payments: { orderBy: { createdAt: "desc" } } },
     });
+    // Also protects historical demo requests created before the showcase seed.
+    if (booking.cabin.isBookable === false) fail("cabinNotBookable");
     if (!["PENDING", "CONFIRMED"].includes(booking.status) ||
         booking.payments.some((payment) => ["PAID", "REFUNDED"].includes(payment.status))) fail("paymentUnavailable");
     const pending = booking.payments.find((payment) => payment.status === "PENDING" &&

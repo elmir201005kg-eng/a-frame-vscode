@@ -5,6 +5,7 @@ import { useRouter } from "@/client/router";
 import type { Locale } from "@/app/i18n/config";
 import type { CommonDictionary } from "@/app/i18n/platform";
 import { FINIK_PAYMENT_AMOUNT } from "@/lib/finik-config";
+import { requestAbort } from "@/client/request-abort";
 
 export function FinikPayment({ bookingId, locale, common, canPay, awaitingConfirmation, initialError = null }: {
   bookingId: string; locale: Locale; common: CommonDictionary; canPay: boolean; awaitingConfirmation: boolean; initialError?: string | null;
@@ -46,12 +47,13 @@ export function FinikPayment({ bookingId, locale, common, canPay, awaitingConfir
     setPending(true);
     setError(null);
     const controller = new AbortController();
+    const abort = requestAbort(20000, controller.signal);
     request.current = controller;
     try {
       const response = await fetch("/api/finik/create-payment", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId, locale }),
-        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),
+        signal: abort.signal,
       });
       const data = await response.json();
       if (!response.ok || typeof data.paymentUrl !== "string") throw new Error(data.error || "paymentFailed");
@@ -62,6 +64,8 @@ export function FinikPayment({ bookingId, locale, common, canPay, awaitingConfir
       setError(common.errors[code as keyof typeof common.errors] || common.errors.paymentFailed);
       inFlight.current = false;
       setPending(false);
+    } finally {
+      abort.dispose();
     }
   }
 

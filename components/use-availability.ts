@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { requestAbort } from "@/client/request-abort";
 
 type Quote = { nights: number; total: string };
 export function useAvailability() {
@@ -21,13 +22,14 @@ export function useAvailability() {
     if (!values.checkIn || !values.checkOut || values.checkOut <= values.checkIn) { setCode("invalidDates"); return; }
     if (!Number.isInteger(Number(values.guests)) || Number(values.guests) < 1) { setCode("invalidGuests"); return; }
     const controller = new AbortController();
+    const request = requestAbort(20000, controller.signal);
     current.current = controller;
     setChecking(true);
     setQuote(null);
     setCode("");
     try {
       const response = await fetch(`/api/availability?${new URLSearchParams({ ...values, promoCode: values.promoCode || "" })}`, {
-        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]), cache: "no-store",
+        signal: request.signal, cache: "no-store",
       });
       const result = await response.json();
       if (current.current !== controller || controller.signal.aborted) return;
@@ -37,6 +39,7 @@ export function useAvailability() {
     } catch {
       if (current.current === controller && !controller.signal.aborted) setCode("serverError");
     } finally {
+      request.dispose();
       if (current.current === controller) { current.current = null; setChecking(false); }
     }
   }

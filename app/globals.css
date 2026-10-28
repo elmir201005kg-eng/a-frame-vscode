@@ -777,6 +777,11 @@ input[type="checkbox"] { accent-color: var(--green); width: 17px; height: 17px; 
 .property-gallery-thumbs button { position: relative; flex-shrink: 0; width: 108px; height: 78px; border: 2px solid transparent; border-radius: 9px; overflow: hidden; }
 .property-gallery-thumbs button.is-active { border-color: var(--green); }
 .property-gallery-thumbs img { object-fit: cover; }
+.property-photo-credits { margin: 12px 0 22px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.property-photo-credits summary { width: fit-content; cursor: pointer; color: var(--green); }
+.property-photo-credits ul { margin: 10px 0 0; padding-left: 20px; }
+.property-photo-credits li { margin-top: 6px; overflow-wrap: anywhere; }
+.property-photo-credits a { text-decoration: underline; text-underline-offset: 3px; }
 .property-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; margin-top: 24px; align-items: start; }
 .property-detail-content { min-width: 0; }
 .property-detail-content section, .property-detail-section { padding-block: var(--space-card); border-top: 1px solid var(--line); }

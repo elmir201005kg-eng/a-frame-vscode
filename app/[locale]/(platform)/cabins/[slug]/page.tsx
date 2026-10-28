@@ -13,6 +13,7 @@ import { pageDictionaries } from "@/app/i18n/platform";
 import { today } from "@/lib/validation";
 import { Icon } from "@/components/icon";
 import { CabinGallery } from "@/components/cabin-gallery";
+import { CabinPhotoCredits } from "@/components/cabin-photo-credits";
 import { PropertyCard } from "@/components/property-card";
 import { PropertyFavorite } from "@/components/property-favorite";
 import { StaySelector } from "@/components/stay-selector";
@@ -43,7 +44,7 @@ export default async function CabinPage({
   const start = today();
   const end = new Date(start + "T00:00:00Z");
   end.setUTCFullYear(end.getUTCFullYear() + 1);
-  const blocked = blockedNights(record.id, start, end);
+  const blocked = record.isBookable ? blockedNights(record.id, start, end) : Promise.resolve([]);
   const reviews = db.review.findMany({
       where: { cabinId: record.id, status: "PUBLISHED" },
       include: { user: { select: { firstName: true } } },
@@ -117,6 +118,7 @@ export default async function CabinPage({
         />
       </div>
       <CabinGallery key={cabin.id} images={cabin.images} common={common} demo={cabin.isDemo} locale={locale} />
+      <CabinPhotoCredits images={cabin.images} locale={locale} />
       {cabin.categories.length > 0 && <div className="property-amenities" aria-label={common.nav.categories}>{cabin.categories.map(category => <span key={category.id}><Icon name="check" />{category.name}</span>)}</div>}
       {cabin.isDemo && <p className="product-notice">{common.labels.demoHint}</p>}
       <div className="property-detail-layout">
@@ -129,6 +131,10 @@ export default async function CabinPage({
             <span>
               <Icon name="bed" />
               {common.labels.bedrooms}: {formatNumber(cabin.bedrooms, locale)}
+            </span>
+            <span>
+              <Icon name="bed" />
+              {common.labels.beds}: {formatNumber(cabin.beds, locale)}
             </span>
             <span>
               <Icon name="bath" />
@@ -160,11 +166,11 @@ export default async function CabinPage({
               <div><span>{common.labels.checkIn}</span><strong>{cabin.checkInTime}</strong></div>
               <div><span>{common.labels.checkOut}</span><strong>{cabin.checkOutTime}</strong></div>
             </div>
-            <p>
+            {cabin.isBookable && <p>
               {interpolate(common.labels.cancellationPolicy, {
                 hours: String(cabin.cancellationHours),
               })}
-            </p>
+            </p>}
             {cabin.rules.length > 0 && (
               <ul className="property-rules">
                 {cabin.rules.map((rule) => (
@@ -215,6 +221,7 @@ export default async function CabinPage({
           locale={locale}
           common={common}
           demo={cabin.isDemo}
+          bookable={cabin.isBookable}
           today={start}
           months={common.calendar.months}
           weekdays={common.calendar.weekdays}

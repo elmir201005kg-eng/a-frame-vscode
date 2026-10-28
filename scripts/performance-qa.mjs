@@ -65,7 +65,7 @@ let built = process.env.QA_REUSE_BUILD === "true";
 const files = process.env.QA_FILES ? process.env.QA_FILES.split(",")
   : process.env.QA_SUITE === "forms" ? ["auth.spec.ts", "responsiveness.spec.ts", "premium-forms.spec.ts"]
     : process.env.QA_SUITE === "admin" ? ["admin-navigation.spec.ts", "admin-period.spec.ts", "admin.spec.ts", "admin-workspace.spec.ts"]
-      : readdirSync("tests").filter(name => name.endsWith(".spec.ts") && name !== "demo-checkout.spec.ts").sort();
+      : readdirSync("tests").filter(name => name.endsWith(".spec.ts") && !["demo-checkout.spec.ts", "demo-catalog.spec.ts"].includes(name)).sort();
 if (files.some(name => !/^[a-z0-9-]+\.spec\.ts$/.test(name))) throw new Error("QA_FILES must contain test filenames separated by commas.");
 
 // Each spec owns fresh fixtures and a fresh server. Exact aggregate assertions

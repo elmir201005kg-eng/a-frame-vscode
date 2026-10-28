@@ -58,11 +58,17 @@ export function OwnerCabinEditor({
           />
           <Field
             label={labels.slug}
+            hint={labels.cabinSlugHint}
             name="slug"
             required
             minLength={2}
             maxLength={100}
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
+            placeholder="a-frame-ala-too"
+            title={labels.cabinSlugHint}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             defaultValue={cabin?.slug}
           />
           <TextAreaField
@@ -130,6 +136,17 @@ export function OwnerCabinEditor({
             maxLength={1000}
             defaultValue={cabin?.location.address}
           />
+          <details className="translation-fields">
+            <summary>{common.nav.translations} · {labels.address} · KG / EN</summary>
+            <div className="form-grid-two">
+              <Field label={`${labels.city} · KG`} name="cityKg" maxLength={150} defaultValue={cabin?.location.cityKg || ""} />
+              <Field label={`${labels.city} · EN`} name="cityEn" maxLength={150} defaultValue={cabin?.location.cityEn || ""} />
+              <Field label={`${labels.village} · KG`} name="villageKg" maxLength={150} defaultValue={cabin?.location.villageKg || ""} />
+              <Field label={`${labels.village} · EN`} name="villageEn" maxLength={150} defaultValue={cabin?.location.villageEn || ""} />
+            </div>
+            <Field label={`${labels.address} · KG`} name="addressKg" maxLength={1000} defaultValue={cabin?.location.addressKg || ""} />
+            <Field label={`${labels.address} · EN`} name="addressEn" maxLength={1000} defaultValue={cabin?.location.addressEn || ""} />
+          </details>
           {admin && <div className="form-grid-two">
             <Field label={admin.text.latitude} name="latitude" type="number" min={-90} max={90} step="0.0000001" defaultValue={cabin?.location.latitude?.toString() || ""} />
             <Field label={admin.text.longitude} name="longitude" type="number" min={-180} max={180} step="0.0000001" defaultValue={cabin?.location.longitude?.toString() || ""} />

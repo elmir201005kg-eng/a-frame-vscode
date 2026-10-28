@@ -70,16 +70,16 @@ export default async function BookingDetailsPage({
       booking.cancelUntil > new Date() &&
       !booking.payments.some((row) => row.status === "PAID");
   const demo = isDemoBooking(booking);
-  const paymentEligible = isGuest && ["PENDING", "CONFIRMED"].includes(booking.status) &&
+  const paymentEligible = booking.cabin.isBookable && isGuest && ["PENDING", "CONFIRMED"].includes(booking.status) &&
     !booking.payments.some((payment) => ["PAID", "REFUNDED"].includes(payment.status));
   const canPay = finikConfigured() && paymentEligible;
   const paymentResult = single(await searchParams, "payment");
-  const awaitingConfirmation = isGuest && paymentResult === "success" &&
+  const awaitingConfirmation = booking.cabin.isBookable && isGuest && paymentResult === "success" &&
     booking.payments.some((payment) => payment.status === "PENDING" && payment.providerPaymentId);
   return (
     <>
       <PageHeading text={text} />
-      {demo && <p className="product-notice">{common.labels.demoBookingHint}</p>}
+      {demo && <p className="product-notice">{booking.cabin.isBookable ? common.labels.demoBookingHint : common.errors.cabinNotBookable}</p>}
       <div className="booking-details-layout">
         <section className="product-panel">
           <div className="booking-summary-heading">
@@ -139,7 +139,7 @@ export default async function BookingDetailsPage({
         </section>
         <aside className="product-panel">
           <h2>{demo ? common.labels.demoBooking : common.nav.payments}</h2>
-          {(demo || canPay) && <p className="product-notice">{demo ? common.labels.demoBookingHint : common.labels.paymentPending}</p>}
+          {(demo || canPay) && <p className="product-notice">{!booking.cabin.isBookable ? common.errors.cabinNotBookable : demo ? common.labels.demoBookingHint : common.labels.paymentPending}</p>}
           {canPay && <p className="payment-line"><span>Finik Pay</span><strong><Money amount={FINIK_PAYMENT_AMOUNT} locale={locale} common={common} /></strong></p>}
           {paymentEligible && !canPay && <p className="form-hint" role="status">{common.labels.paymentProviderUnavailable} <a className="text-link" href="#site-contact">{common.labels.contact}</a></p>}
           {isGuest && (canPay || awaitingConfirmation) && <FinikPayment bookingId={booking.id.toString()} locale={locale} common={common} canPay={canPay} awaitingConfirmation={awaitingConfirmation} initialError={paymentEligible && paymentResult === "failed" ? common.errors.paymentFailed : null} />}

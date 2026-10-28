@@ -22,7 +22,8 @@ createServer(async (incoming, outgoing) => {
     }
     const origin = `${protocol}//${host}`;
     const url = new URL(incoming.url || "/", origin);
-    if (["GET", "HEAD"].includes(incoming.method)) {
+    // RSC navigation must reach the renderer even when an offline HTML file exists.
+    if (["GET", "HEAD"].includes(incoming.method) && incoming.headers.rsc !== "1") {
       for (const root of [path.join(dist, "client"), path.resolve("public")]) {
         const filename = /^\/(kg|ru|en)\/offline\/?$/.test(url.pathname) ? `${url.pathname.replace(/\/$/, "")}/index.html` : url.pathname;
         const file = path.resolve(root, `.${decodeURIComponent(filename)}`);

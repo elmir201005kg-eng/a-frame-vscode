@@ -5,6 +5,7 @@ import { useRouter } from "@/client/router";
 import type { FormEvent } from "react";
 import type { CommonDictionary } from "@/app/i18n/platform";
 import { Field } from "@/components/premium-fields";
+import { requestAbort } from "@/client/request-abort";
 
 export function PhotoUpload({ cabinId, common }: { cabinId: string; common: CommonDictionary }) {
   const [pending, setPending] = useState(false),
@@ -20,8 +21,9 @@ export function PhotoUpload({ cabinId, common }: { cabinId: string; common: Comm
     submitting.current = true;
     setPending(true);
     setCode("");
+    const abort = requestAbort(60000);
     try {
-      const response = await fetch("/api/uploads", { method: "POST", body, signal: AbortSignal.timeout(60000) });
+      const response = await fetch("/api/uploads", { method: "POST", body, signal: abort.signal });
       const result = await response.json();
       if (!response.ok) setCode(result.code || "uploadFailed");
       else {
@@ -31,6 +33,7 @@ export function PhotoUpload({ cabinId, common }: { cabinId: string; common: Comm
     } catch {
       setCode("uploadFailed");
     } finally {
+      abort.dispose();
       setPending(false);
       submitting.current = false;
     }

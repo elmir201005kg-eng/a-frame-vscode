@@ -1,115 +1,122 @@
-type DemoCabin = {
-  slug: string;
-  region: string;
-  title: [string, string, string];
-  description: [string, string, string];
-  price: number;
-  guests: number;
-  bedrooms: number;
-  photos: string[];
-  amenities: string[];
+import type { Translation } from "./demo-cabin-details";
+
+export type DemoCabin = {
+  slug: string; region: string; title: Translation; description: Translation;
+  settlement: Translation; city?: boolean; price: number;
+  guests: number; bedrooms: number; beds: number; bathrooms: number; photos: string[];
 };
 
-// Concept properties and illustrative images; none represents an actual rental listing.
-export const demoCabins: DemoCabin[] = [
+// Exactly eight fictional properties. Stock photos illustrate concepts,
+// rather than actual rental accommodation at the fictional addresses below.
+const collection: DemoCabin[] = [
   {
-    slug: "demo-kol-nur", region: "issyk-kul", title: ["Көл Нур", "Көл Нур", "Kol Nur"],
+    slug: "demo-a-frame-ala-too", region: "chui",
+    title: ["A-Frame Ala-Too", "A-Frame Ala-Too", "A-Frame Ala-Too"],
+    settlement: ["Беш-Кунгей", "Беш-Күңгөй", "Besh-Kungey"],
     description: [
-      "Светлый A-frame для спокойных выходных у озера: панорамное остекление, уютная спальня и открытая терраса. Пространство для двоих с кухней и местом для утреннего кофе. Демонстрационный концепт, фотографии иллюстративные.",
-      "Көл жээгиндеги тынч дем алыш үчүн жарык A-frame: панорамалык терезелер, жайлуу уктоочу бөлмө жана ачык терраса. Эки адамга ылайыктуу ашкана жана эртең менен кофе ичүүгө орун. Бул көрсөтмө концепт, сүрөттөр мисал катары берилген.",
-      "A light-filled A-frame concept for a quiet lakeside weekend, with panoramic glazing, a cosy bedroom and an open terrace. A kitchen and a morning coffee corner complete this retreat for two. Demonstration concept with illustrative photographs.",
-    ], price: 4500, guests: 2, bedrooms: 1,
-    photos: ["cabin-lake.webp", "cabin-escape.webp", "kyrgyzstan-issyk-kul.webp"],
-    amenities: ["kitchen", "terrace", "wifi", "parking"],
+      "Светлый A-Frame, вдохновлённый предгорьями Ала-Тоо: высокий треугольный потолок, панорамные окна и тёплое дерево создают пространство для спокойных выходных. Две спальни с двуспальными кроватями, гостиная с мягким диваном и кухня рассчитаны на четырёх гостей. На открытой террасе приятно читать и встречать закат; отопление, Wi-Fi и парковка дополняют домашний комфорт. Примерная цена — 5 000 сом за ночь. Это вымышленный демо-домик; фотографии иллюстративные, бронирование и оплата недоступны.",
+      "Ала-Тоонун этектеринен шыктанган жарык A-Frame: бийик үч бурчтуу шып, панорамалык терезелер жана жылуу жыгач жасалгасы тынч дем алышка чакырат. Эки кишилик керебеттери бар эки уктоочу бөлмө, жумшак дивандуу конок бөлмөсү жана ашкана төрт конокко ылайыкталган. Ачык террасада китеп окуп, күндүн батышын көрүүгө болот; жылытуу, Wi-Fi жана унаа токтотуучу жай ыңгайлуулукту толуктайт. Болжолдуу баасы — түнүнө 5 000 сом. Бул ойдон чыгарылган демо-үй; сүрөттөр иллюстрациялык, ээлөө жана төлөм жеткиликсиз.",
+      "A light-filled A-Frame inspired by the foothills of Ala-Too, with a soaring triangular ceiling, panoramic windows and warm timber finishes. Two double bedrooms, a soft-sofa lounge and a kitchen accommodate four concept guests. An open terrace invites reading and sunset watching, while heating, Wi-Fi and parking complete the home comforts. Indicative price: KGS 5,000 per night. This fictional demo cabin uses illustrative stock photos; booking and payment are unavailable.",
+    ],
+    price: 5000, guests: 4, bedrooms: 2, beds: 2, bathrooms: 1,
+    photos: ["demo-ala-too.webp", "demo-interior-timber.webp", "kyrgyzstan-ala-archa.webp"],
   },
   {
-    slug: "demo-pine-house", region: "chon-kemin", title: ["Сосновый дом", "Карагай үйү", "Pine House"],
+    slug: "demo-black-diamond", region: "issyk-kul",
+    title: ["Black Diamond", "Black Diamond", "Black Diamond"],
+    settlement: ["Чолпон-Ата", "Чолпон-Ата", "Cholpon-Ata"], city: true,
     description: [
-      "Деревянный A-frame среди деревьев, задуманный для семейного отдыха в Чон-Кемине. Две спальни, тёплая гостиная и терраса объединяют домашний комфорт и природу. Демонстрационный концепт, фотографии иллюстративные.",
-      "Чоң-Кеминде үй-бүлөлүк эс алуу үчүн дарактардын арасындагы жыгач A-frame концепти. Эки уктоочу бөлмө, жылуу конок бөлмөсү жана терраса үйдүн жайлуулугун табият менен айкалыштырат. Бул көрсөтмө концепт, сүрөттөр мисал катары берилген.",
-      "A timber A-frame concept among the trees for a family stay in Chon-Kemin. Two bedrooms, a warm living room and a terrace bring together home comforts and nature. Demonstration concept with illustrative photographs.",
-    ], price: 6200, guests: 4, bedrooms: 2,
-    photos: ["cabin-forest.webp", "cabin-hideaway.webp", "kyrgyzstan-chon-kemin.webp"],
-    amenities: ["wifi", "kitchen", "heating", "terrace", "parking"],
+      "Выразительный A-Frame в графитовой палитре, вдохновлённый отдыхом на Иссык-Куле. Большое остекление, дерево и мягкий вечерний свет создают камерную атмосферу. Две спальни с двуспальными кроватями и раскладной диван в гостиной рассчитаны на шесть гостей; две ванные помогают комфортно собираться утром. Кухня, терраса, отопление, Wi-Fi и парковка делают концепт удобным для долгих выходных. Примерная цена — 8 000 сом за ночь. Демо-объект вымышленный; фото иллюстративные, реальные бронирования и платежи отключены.",
+      "Ысык-Көлдөгү эс алуудан шыктанган графит түстүү көркөм A-Frame. Чоң терезелер, жыгач жана кечки жумшак жарык жайлуу маанай түзөт. Эки кишилик керебеттери бар эки уктоочу бөлмө жана конок бөлмөсүндөгү жайылма диван алты конокко ылайыкталган; эки жуунучу бөлмө эртең менен ыңгайлуу. Ашкана, терраса, жылытуу, Wi-Fi жана унаа токтотуучу жай узак дем алыш үчүн каралган. Болжолдуу баасы — түнүнө 8 000 сом. Бул ойдон чыгарылган демо-объект; сүрөттөр иллюстрациялык, чыныгы ээлөө жана төлөм өчүрүлгөн.",
+      "A striking graphite-toned A-Frame inspired by escapes to Issyk-Kul. Generous glazing, timber and soft evening lighting create an intimate atmosphere. Two double bedrooms and a sofa bed in the lounge accommodate six concept guests; two bathrooms make mornings easier. A kitchen, terrace, heating, Wi-Fi and parking suit long weekends. Indicative price: KGS 8,000 per night. This fictional demo property uses illustrative stock photos; real bookings and payments are disabled.",
+    ],
+    price: 8000, guests: 6, bedrooms: 2, beds: 3, bathrooms: 2,
+    photos: ["demo-black-diamond.webp", "demo-interior-lounge.webp", "kyrgyzstan-issyk-kul.webp"],
   },
   {
-    slug: "demo-karakol-loft", region: "karakol", title: ["Каракол Лофт", "Каракол Лофт", "Karakol Loft"],
+    slug: "demo-sky-house", region: "chui",
+    title: ["Sky House", "Sky House", "Sky House"],
+    settlement: ["Кой-Таш", "Кой-Таш", "Koi-Tash"],
     description: [
-      "Минималистичный горный дом с высоким потолком, антресолью и просторной зоной отдыха. Концепция для путешествий в Каракол: кухня, отопление и большие окна с видом на природу. Демонстрационный объект, фотографии не относятся к реальному предложению аренды.",
-      "Бийик шыптуу, антресоль жана кенен эс алуу аянты бар минималисттик тоо үйүнүн концепти. Караколго саякат үчүн ашкана, жылытуу жана табиятты караган чоң терезелер каралган. Көрсөтмө объект, сүрөттөр чыныгы ижара сунушуна тиешелүү эмес.",
-      "A minimal mountain home concept with a high ceiling, a mezzanine and a generous living area. Designed for trips to Karakol, with a kitchen, heating and large windows towards nature. Demonstration property; photos do not depict an actual rental offer.",
-    ], price: 7800, guests: 4, bedrooms: 2,
-    photos: ["cabin-mountain.webp", "cabin-valley.webp", "kyrgyzstan-karakol.webp"],
-    amenities: ["heating", "kitchen", "wifi", "parking"],
+      "Воздушный домик с высоким сводом, светлой деревянной отделкой и окнами, которые словно обрамляют небо. Sky House задуман для неспешных выходных в Чуйской области: две отдельные спальни на четырёх гостей, общая гостиная и кухня с обеденным столом. На террасе можно устроить долгий завтрак, а вечером собраться за настольными играми. Предусмотрены отопление, Wi-Fi, парковка и ванная комната. Примерная цена — 6 500 сом за ночь. Домик вымышленный, фотографии иллюстративные; бронирование и оплата недоступны.",
+      "Бийик шыптуу, ачык түстүү жыгач жасалгалуу жана асманды алкактагандай терезелери бар жарык үй. Sky House концепти Чүй облусундагы шашпаган дем алыш үчүн түзүлгөн: төрт конокко эки өзүнчө уктоочу бөлмө, жалпы конок бөлмөсү жана тамактануучу үстөлү бар ашкана. Террасада жай эртең мененки тамак ичип, кечинде үстөл оюндарын ойноого болот. Жылытуу, Wi-Fi, унаа токтотуучу жай жана жуунучу бөлмө каралган. Болжолдуу баасы — түнүнө 6 500 сом. Бул ойдон чыгарылган демо-үй; сүрөттөр иллюстрациялык, ээлөө жана төлөм жеткиликсиз.",
+      "An airy cabin with a lofty ceiling, pale timber and windows that seem to frame the sky. Sky House imagines an unhurried weekend in Chuy Region: two separate bedrooms for four guests, a shared lounge and a kitchen with a dining table. The terrace is made for long breakfasts, followed by evening board games indoors. Heating, Wi-Fi, parking and a bathroom complete the concept. Indicative price: KGS 6,500 per night. This fictional demo cabin has illustrative photos; booking and payment are unavailable.",
+    ],
+    price: 6500, guests: 4, bedrooms: 2, beds: 2, bathrooms: 1,
+    photos: ["demo-sky-house.webp", "demo-interior-kitchen.webp", "kyrgyzstan-ala-archa.webp"],
   },
   {
-    slug: "demo-sary-oi", region: "issyk-kul", title: ["Сары-Ой", "Сары-Ой", "Sary-Oi"],
+    slug: "demo-mountain-view", region: "naryn",
+    title: ["Mountain View", "Mountain View", "Mountain View"],
+    settlement: ["Нарын", "Нарын", "Naryn"], city: true,
     description: [
-      "Просторный A-frame для семьи или небольшой компании: три спальни, общая кухня и терраса для долгих летних вечеров. Иллюстрация отдыха на Иссык-Куле, а не реальный сдаваемый объект.",
-      "Үй-бүлө же чакан топ үчүн кенен A-frame: үч уктоочу бөлмө, жалпы ашкана жана узак жайкы кечтер үчүн терраса. Ысык-Көлдө эс алуунун мисалы, чыныгы ижара объекти эмес.",
-      "A spacious A-frame concept for a family or a small group: three bedrooms, a shared kitchen and a terrace for long summer evenings. An illustration of a stay at Issyk-Kul, rather than a real rental property.",
-    ], price: 9500, guests: 6, bedrooms: 3,
-    photos: ["cabin-escape.webp", "cabin-lake.webp", "kyrgyzstan-issyk-kul.webp"],
-    amenities: ["terrace", "kitchen", "parking", "wifi", "heating"],
+      "Горный A-Frame, вдохновлённый широкими долинами и прохладными вечерами Нарына. Тёплый интерьер сочетает натуральное дерево, мягкие пледы и большую общую зону для разговоров за чаем. Две спальни с двумя двуспальными и одной односпальной кроватью рассчитаны на пять гостей. В концепте есть кухня, ванная, отопление, Wi-Fi и парковка; терраса продолжает жилое пространство на свежем воздухе. Примерная цена — 7 000 сом за ночь. Это вымышленное демо-предложение: фото иллюстративные, бронирования и платежи не принимаются.",
+      "Нарындын кең өрөөндөрүнөн жана салкын кечтеринен шыктанган тоо A-Frame. Жылуу ички жасалга табигый жыгачты, жумшак жууркандарды жана чай үстүндө баарлашууга ылайык чоң жалпы аянтты бириктирет. Эки уктоочу бөлмөдөгү эки кишилик эки жана бир кишилик бир керебет беш конокко ылайык. Концептте ашкана, жуунучу бөлмө, жылытуу, Wi-Fi жана унаа токтотуучу жай бар; терраса таза абада эс алууга арналган. Болжолдуу баасы — түнүнө 7 000 сом. Бул ойдон чыгарылган демо-сунуш: сүрөттөр иллюстрациялык, ээлөө жана төлөм кабыл алынбайт.",
+      "A mountain A-Frame inspired by Naryn's wide valleys and cool evenings. Natural timber, soft blankets and a generous lounge set the scene for conversations over tea. Two bedrooms with two double beds and one single bed accommodate five concept guests. A kitchen, bathroom, heating, Wi-Fi and parking are included, with a terrace extending the living space outdoors. Indicative price: KGS 7,000 per night. This fictional demo listing has illustrative photos; bookings and payments are not accepted.",
+    ],
+    price: 7000, guests: 5, bedrooms: 2, beds: 3, bathrooms: 1,
+    photos: ["demo-mountain-view.webp", "demo-interior-timber.webp", "kyrgyzstan-naryn.webp"],
   },
   {
-    slug: "demo-archa-retreat", region: "ala-archa", title: ["Арча Retreat", "Арча Retreat", "Archa Retreat"],
+    slug: "demo-pine-forest", region: "issyk-kul",
+    title: ["Pine Forest", "Pine Forest", "Pine Forest"],
+    settlement: ["Григорьевка", "Григорьевка", "Grigorievka"],
     description: [
-      "Компактное укрытие для двоих, вдохновлённое хвойными лесами Ала-Арчи. Тёплое дерево, открытая терраса и тихая гостиная создают атмосферу медленного отдыха. Демонстрационный концепт с иллюстративными изображениями.",
-      "Ала-Арчанын ийне жалбырактуу токойлорунан шыктанган эки адамдык чакан үйдүн концепти. Жылуу жыгач, ачык терраса жана тынч конок бөлмөсү жай эс алууга ылайыктуу. Иллюстрациялык сүрөттөр менен көрсөтмө концепт.",
-      "A compact retreat for two inspired by the conifer forests of Ala-Archa. Warm timber, an open terrace and a quiet living space evoke a slower kind of holiday. Demonstration concept with illustrative images.",
-    ], price: 5200, guests: 2, bedrooms: 1,
-    photos: ["cabin-hideaway.webp", "cabin-forest.webp", "kyrgyzstan-ala-archa.webp"],
-    amenities: ["terrace", "heating", "kitchen", "parking"],
+      "Уютный A-Frame в природной палитре, вдохновлённый хвойными ущельями Иссык-Куля. Деревянные поверхности, зелёные акценты и панорамное окно создают атмосферу лесного убежища. Две спальни с двуспальными кроватями рассчитаны на четырёх гостей, а кухня и гостиная объединяют компанию за ужином. Терраса задумана для чтения и утреннего кофе; предусмотрены ванная, отопление, Wi-Fi и парковка. Примерная цена — 5 500 сом за ночь. Это вымышленный демо-концепт с иллюстративными фото; реальные бронирования и оплата отключены.",
+      "Ысык-Көлдүн ийне жалбырактуу капчыгайларынан шыктанган табигый түстөгү жайлуу A-Frame. Жыгач беттер, жашыл өңдөр жана панорамалык терезе токойдогу эс алуу жайынын маанайын түзөт. Эки кишилик керебеттери бар эки уктоочу бөлмө төрт конокко ылайык, ал эми ашкана жана конок бөлмөсү кечки тамакка чогултат. Терраса китеп окууга жана эртең менен кофе ичүүгө арналган; жуунучу бөлмө, жылытуу, Wi-Fi жана унаа токтотуучу жай каралган. Болжолдуу баасы — түнүнө 5 500 сом. Бул ойдон чыгарылган демо-концепт; сүрөттөр иллюстрациялык, чыныгы ээлөө жана төлөм өчүрүлгөн.",
+      "A cosy, nature-toned A-Frame inspired by the conifer-lined gorges of Issyk-Kul. Timber, quiet green accents and a panoramic window evoke a woodland refuge. Two double bedrooms suit four concept guests, while the kitchen and lounge bring everyone together for dinner. The terrace is designed for reading and morning coffee; a bathroom, heating, Wi-Fi and parking are included. Indicative price: KGS 5,500 per night. This fictional demo concept uses illustrative photos; real bookings and payments are disabled.",
+    ],
+    price: 5500, guests: 4, bedrooms: 2, beds: 2, bathrooms: 1,
+    photos: ["demo-pine-forest.webp", "demo-interior-kitchen.webp", "kyrgyzstan-chon-kemin.webp"],
   },
   {
-    slug: "demo-naryn-sky", region: "naryn", title: ["Нарын Sky", "Нарын Sky", "Naryn Sky"],
+    slug: "demo-alpine-luxury", region: "karakol",
+    title: ["Alpine Luxury", "Alpine Luxury", "Alpine Luxury"],
+    settlement: ["Каракол", "Каракол", "Karakol"], city: true,
     description: [
-      "Дом с открытой планировкой, вдохновлённый широкими долинами Нарына. Две спальни, большие окна и отопление для прохладных вечеров. Только демонстрация интерфейса; расположение и изображения не подтверждают реальное предложение.",
-      "Нарындын кең өрөөндөрүнөн шыктанган ачык пландуу үйдүн концепти. Эки уктоочу бөлмө, чоң терезелер жана салкын кечтер үчүн жылытуу каралган. Интерфейсти көрсөтүү үчүн гана; жайгашкан жери жана сүрөттөр чыныгы сунушту ырастабайт.",
-      "An open-plan home concept inspired by Naryn's wide valleys. Two bedrooms, large windows and heating for cooler evenings. For interface demonstration only; its location and images do not establish an actual rental offer.",
-    ], price: 6800, guests: 4, bedrooms: 2,
-    photos: ["cabin-valley.webp", "cabin-mountain.webp", "kyrgyzstan-naryn.webp"],
-    amenities: ["heating", "parking", "kitchen", "terrace"],
+      "Просторный A-Frame премиального настроения, вдохновлённый пейзажами Каракола. Высокая гостиная с большим остеклением, натуральные материалы и мягкая мебель создают место для отдыха большой семьи. Три спальни с тремя двуспальными и двумя односпальными кроватями рассчитаны на восемь гостей; предусмотрены две ванные. Просторная кухня, обеденная зона и терраса дополнены отоплением, Wi-Fi и парковкой. Примерная цена — 12 000 сом за ночь. Это вымышленный демо-домик; фото иллюстративные, бронирования и платежи недоступны.",
+      "Караколдун пейзаждарынан шыктанган, өзгөчө жайлуулукту элестеткен кенен A-Frame. Чоң терезелүү бийик конок бөлмөсү, табигый материалдар жана жумшак эмерек чоң үй-бүлөнүн эс алуусуна ылайыкталган. Үч уктоочу бөлмөдөгү эки кишилик үч жана бир кишилик эки керебет сегиз конокко эсептелген; эки жуунучу бөлмө каралган. Кең ашкана, тамактануу аянты жана терраса жылытуу, Wi-Fi жана унаа токтотуучу жай менен толукталат. Болжолдуу баасы — түнүнө 12 000 сом. Бул ойдон чыгарылган демо-үй; сүрөттөр иллюстрациялык, ээлөө жана төлөм жеткиликсиз.",
+      "A spacious A-Frame with a refined alpine mood inspired by Karakol. A double-height lounge with generous glazing, natural materials and soft furniture imagines a retreat for a larger family. Three bedrooms contain three double beds and two single beds for eight concept guests, with two bathrooms. A broad kitchen, dining area and terrace are complemented by heating, Wi-Fi and parking. Indicative price: KGS 12,000 per night. This fictional demo cabin has illustrative photos; bookings and payments are unavailable.",
+    ],
+    price: 12000, guests: 8, bedrooms: 3, beds: 5, bathrooms: 2,
+    photos: ["demo-alpine-luxury.webp", "demo-interior-lounge.webp", "kyrgyzstan-karakol.webp"],
   },
   {
-    slug: "demo-kemin-hideaway", region: "chon-kemin", title: ["Кемин Hideaway", "Кемин Hideaway", "Kemin Hideaway"],
+    slug: "demo-nomad-house", region: "osh",
+    title: ["Nomad House", "Nomad House", "Nomad House"],
+    settlement: ["Ош", "Ош", "Osh"], city: true,
     description: [
-      "Небольшой дом среди зелени для тихого отдыха вдвоём. Кухня, уютная зона сна и деревянная терраса с местом для чтения. Демонстрационный концепт для Чон-Кемина; изображения не являются фотографиями сдаваемого жилья.",
-      "Эки адамдын тынч эс алуусу үчүн жашыл бактардын арасындагы чакан үйдүн концепти. Ашкана, жайлуу уктоо аянты жана китеп окууга орун бар жыгач терраса. Чоң-Кемин үчүн көрсөтмө концепт; сүрөттөр ижарадагы үйдү көрсөтпөйт.",
-      "A small home concept among greenery for a quiet getaway for two. A kitchen, a cosy sleeping area and a timber terrace with space to read. Demonstration concept for Chon-Kemin; images are not photographs of a rental property.",
-    ], price: 3900, guests: 2, bedrooms: 1,
-    photos: ["cabin-hideaway.webp", "cabin-forest.webp", "kyrgyzstan-chon-kemin.webp"],
-    amenities: ["terrace", "kitchen", "parking"],
+      "Небольшой A-Frame с тёплым южным настроением и деталями, вдохновлёнными кыргызским гостеприимством. Натуральное дерево, мягкий текстиль и уютная обеденная зона создают домашнюю атмосферу. В спальне предусмотрены двуспальная и односпальная кровати для трёх гостей; рядом расположены кухня и ванная. Терраса подходит для вечернего чая, а отопление, Wi-Fi и парковка дополняют удобства. Примерная цена — 4 500 сом за ночь. Nomad House — вымышленный демо-домик: фото иллюстративные, бронирования и платежи отключены.",
+      "Кыргыз меймандостугунан шыктанган кооздуктары жана түштүктүн жылуу маанайы бар чакан A-Frame. Табигый жыгач, жумшак кездемелер жана жайлуу тамактануу аянты үйдөгүдөй маанай түзөт. Уктоочу бөлмөдө үч конок үчүн эки кишилик жана бир кишилик керебет каралган; жанында ашкана жана жуунучу бөлмө жайгашкан. Терраса кечки чайга ылайык, ал эми жылытуу, Wi-Fi жана унаа токтотуучу жай ыңгайлуулукту толуктайт. Болжолдуу баасы — түнүнө 4 500 сом. Nomad House — ойдон чыгарылган демо-үй: сүрөттөр иллюстрациялык, ээлөө жана төлөм өчүрүлгөн.",
+      "A small A-Frame with a warm southern mood and details inspired by Kyrgyz hospitality. Natural timber, soft textiles and a cosy dining corner create a homely atmosphere. One bedroom provides a double bed and a single bed for three concept guests, alongside a kitchen and bathroom. The terrace suits evening tea, while heating, Wi-Fi and parking complete the amenities. Indicative price: KGS 4,500 per night. Nomad House is a fictional demo cabin with illustrative photos; bookings and payments are disabled.",
+    ],
+    price: 4500, guests: 3, bedrooms: 1, beds: 2, bathrooms: 1,
+    photos: ["demo-nomad-house.webp", "demo-interior-timber.webp", "kyrgyzstan-osh.webp"],
   },
   {
-    slug: "demo-osh-horizon", region: "osh", title: ["Ош Horizon", "Ош Horizon", "Osh Horizon"],
+    slug: "demo-lake-paradise", region: "issyk-kul",
+    title: ["Lake Paradise", "Lake Paradise", "Lake Paradise"],
+    settlement: ["Бостери", "Бостери", "Bosteri"],
     description: [
-      "Семейный A-frame концепт, вдохновлённый природой юга Кыргызстана. Просторная гостиная, две спальни и кухня для неспешных завтраков. Объект и фотографии служат демонстрации и не доступны для реального платного проживания.",
-      "Кыргызстандын түштүгүнүн табиятынан шыктанган үй-бүлөлүк A-frame концепти. Кенен конок бөлмөсү, эки уктоочу бөлмө жана жай эртең мененки тамак үчүн ашкана. Объект жана сүрөттөр көрсөтмө үчүн, чыныгы акы төлөнүүчү жашоого жеткиликтүү эмес.",
-      "A family A-frame concept inspired by the landscapes of southern Kyrgyzstan. A generous living room, two bedrooms and a kitchen for unhurried breakfasts. The property and photos are for demonstration and are unavailable for a real paid stay.",
-    ], price: 7200, guests: 5, bedrooms: 2,
-    photos: ["hero.webp", "cabin-valley.webp", "kyrgyzstan-osh.webp"],
-    amenities: ["kitchen", "parking", "wifi", "terrace"],
-  },
-  {
-    slug: "demo-jeti-oguz", region: "karakol", title: ["Жети-Огуз Lodge", "Жети-Өгүз Lodge", "Jeti-Oguz Lodge"],
-    description: [
-      "A-frame концепт для компании из шести человек с тремя спальнями и большой общей зоной. Деревянная отделка и терраса вдохновлены поездками в горы рядом с Караколом. Демонстрационный объект с иллюстративной галереей.",
-      "Үч уктоочу бөлмөсү жана чоң жалпы аянты бар алты адамдык A-frame концепти. Жыгач жасалгасы жана террасасы Караколго жакын тоолорго саякаттардан шыктанган. Иллюстрациялык галереясы бар көрсөтмө объект.",
-      "An A-frame concept for six guests, with three bedrooms and a generous shared living space. Timber finishes and a terrace are inspired by mountain trips near Karakol. Demonstration property with an illustrative gallery.",
-    ], price: 10800, guests: 6, bedrooms: 3,
-    photos: ["cabin-mountain.webp", "cabin-escape.webp", "kyrgyzstan-karakol.webp"],
-    amenities: ["heating", "terrace", "wifi", "kitchen", "parking"],
-  },
-  {
-    slug: "demo-song-kol", region: "naryn", title: ["Сон-Көл Escape", "Соң-Көл Escape", "Song-Kol Escape"],
-    description: [
-      "Лаконичный дом для пары, вдохновлённый простором высокогорного озера Сон-Көл. Тёплая спальня, компактная кухня и терраса для созерцания природы. Демонстрационная концепция; реальное размещение и платежи недоступны.",
-      "Соң-Көлдүн бийик тоолуу кеңдигинен шыктанган эки адамдык жөнөкөй үйдүн концепти. Жылуу уктоочу бөлмө, чакан ашкана жана табиятка суктануу үчүн терраса. Көрсөтмө концепт; чыныгы жайгаштыруу жана төлөмдөр жеткиликтүү эмес.",
-      "A pared-back home concept for a couple, inspired by the openness of high-altitude Song-Kol. A warm bedroom, a compact kitchen and a terrace for enjoying nature. Demonstration concept; real accommodation and payments are unavailable.",
-    ], price: 5800, guests: 2, bedrooms: 1,
-    photos: ["cabin-lake.webp", "cabin-hideaway.webp", "kyrgyzstan-naryn.webp"],
-    amenities: ["heating", "terrace", "kitchen", "parking"],
+      "Светлый A-Frame, вдохновлённый летним отдыхом на Иссык-Куле: большие окна, песочная палитра и просторная терраса для неспешных завтраков. Три спальни с двумя двуспальными и двумя односпальными кроватями рассчитаны на шесть гостей; две ванные удобны для семьи или друзей. Общая гостиная и кухня с обеденным столом располагают к долгим разговорам. Предусмотрены Wi-Fi, отопление и парковка. Примерная цена — 9 000 сом за ночь. Это вымышленный демо-объект с иллюстративными фото; бронирование, оплата и проживание недоступны.",
+      "Ысык-Көлдөгү жайкы эс алуудан шыктанган жарык A-Frame: чоң терезелер, кум түстөрү жана жай эртең мененки тамак үчүн кең терраса. Үч уктоочу бөлмөдөгү эки кишилик эки жана бир кишилик эки керебет алты конокко эсептелген; эки жуунучу бөлмө үй-бүлөгө же досторго ыңгайлуу. Жалпы конок бөлмөсү жана тамактануучу үстөлү бар ашкана узак баарлашууга чакырат. Wi-Fi, жылытуу жана унаа токтотуучу жай каралган. Болжолдуу баасы — түнүнө 9 000 сом. Бул ойдон чыгарылган демо-объект; сүрөттөр иллюстрациялык, ээлөө, төлөм жана жашоо жеткиликсиз.",
+      "A bright A-Frame inspired by summer days at Issyk-Kul, with large windows, a sandy palette and a broad terrace for unhurried breakfasts. Three bedrooms with two double beds and two single beds suit six concept guests; two bathrooms make sharing comfortable for family or friends. A communal lounge and kitchen with a dining table invite long conversations. Wi-Fi, heating and parking are included. Indicative price: KGS 9,000 per night. This fictional demo property uses illustrative photos; bookings, payments and real stays are unavailable.",
+    ],
+    price: 9000, guests: 6, bedrooms: 3, beds: 4, bathrooms: 2,
+    photos: ["demo-lake-paradise.webp", "demo-interior-kitchen.webp", "kyrgyzstan-issyk-kul.webp"],
   },
 ];
+
+export const demoCabins = collection.map((item, index) => {
+  const plot = `DEMO-${String(index + 1).padStart(2, "0")}`;
+  return {
+    ...item,
+    address: [
+      `${item.settlement[0]}, условный участок ${plot} (вымышленный адрес)`,
+      `${item.settlement[1]}, шарттуу тилке ${plot} (ойдон чыгарылган дарек)`,
+      `${item.settlement[2]}, fictional plot ${plot} (not a real address)`,
+    ] as Translation,
+    amenities: ["wifi", "kitchen", "heating", "parking", "terrace"],
+    checkInTime: "14:00", checkOutTime: "11:00",
+  };
+});

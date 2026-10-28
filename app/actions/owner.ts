@@ -53,11 +53,11 @@ export async function cabinAction(_: ActionState, form: FormData): Promise<Actio
       uniqueAmenities.length
     )
       fail("invalidFields");
-    const rules = text(form, "rules", 0, 5000)
+    const rules = [...new Set(text(form, "rules", 0, 5000)
       .split("\n")
       .map((value) => value.trim())
       .filter(Boolean)
-      .slice(0, 20);
+      .slice(0, 20))];
     if (rules.some((value) => value.length > 255)) fail("invalidFields");
     const data = {
       title,
@@ -80,6 +80,12 @@ export async function cabinAction(_: ActionState, form: FormData): Promise<Actio
     const address = text(form, "address", 3, 1000),
       city = text(form, "city", 0, 150) || null,
       village = text(form, "village", 0, 150) || null;
+    // Older forms may omit these fields; omission must not erase translations.
+    const locationTranslations = Object.fromEntries(
+      (["cityKg", "cityEn", "villageKg", "villageEn", "addressKg", "addressEn"] as const)
+        .filter((name) => form.has(name))
+        .map((name) => [name, text(form, name, 0, name.startsWith("address") ? 1000 : 150) || null]),
+    );
     const coordinates = admin ? {
       latitude: form.get("latitude") ? numberField(form, "latitude", -90, 90, false) : null,
       longitude: form.get("longitude") ? numberField(form, "longitude", -180, 180, false) : null,
@@ -99,7 +105,8 @@ export async function cabinAction(_: ActionState, form: FormData): Promise<Actio
         const existing = cabinId
           ? await tx.cabin.findFirst({
               where: { id: cabinId, ...(!admin ? { ownerId: owner } : {}) },
-              select: { id: true, locationId: true, status: true, title: true, pricePerNight: true, maxGuests: true, ownerId: true },
+              select: { id: true, locationId: true, status: true, title: true, pricePerNight: true, maxGuests: true, ownerId: true,
+                location: { select: { cityKg: true, cityEn: true, villageKg: true, villageEn: true, addressKg: true, addressEn: true } } },
             })
           : null;
         if (cabinId && !existing) fail("notFound");
@@ -114,9 +121,9 @@ export async function cabinAction(_: ActionState, form: FormData): Promise<Actio
           existing && !sharedLocation
             ? await tx.location.update({
                 where: { id: existing.locationId },
-                data: { regionId, address, city, village, ...coordinates },
+                data: { regionId, address, city, village, ...locationTranslations, ...coordinates },
               })
-            : await tx.location.create({ data: { regionId, address, city, village, ...coordinates } });
+            : await tx.location.create({ data: { ...existing?.location, regionId, address, city, village, ...locationTranslations, ...coordinates } });
         const row = existing
           ? await tx.cabin.update({
               where: { id: existing.id },
@@ -135,10 +142,19 @@ export async function cabinAction(_: ActionState, form: FormData): Promise<Actio
           await tx.cabinCategory.deleteMany({ where: { cabinId: row.id } });
           if (categories.length) await tx.cabinCategory.createMany({ data: categories.map(categoryId => ({ cabinId: row.id, categoryId })) });
         }
-        await tx.cabinRule.updateMany({ where: { cabinId: row.id }, data: { isActive: false } });
-        if (rules.length)
+        // Keep the existing row (including its description and translations)
+        // when its title remains in the editor. Only removed rules are disabled.
+        const activeRules = await tx.cabinRule.findMany({
+          where: { cabinId: row.id, isActive: true }, select: { title: true },
+        });
+        await tx.cabinRule.updateMany({
+          where: { cabinId: row.id, isActive: true, title: { notIn: rules } },
+          data: { isActive: false },
+        });
+        const newRules = rules.filter((title) => !activeRules.some((rule) => rule.title === title));
+        if (newRules.length)
           await tx.cabinRule.createMany({
-            data: rules.map((title) => ({ cabinId: row.id, title })),
+            data: newRules.map((title) => ({ cabinId: row.id, title })),
           });
         await tx.auditLog.create({
           data: {

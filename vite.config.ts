@@ -11,12 +11,14 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [rsc(), react(), tailwindcss()],
     resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
-    server: { host: "127.0.0.1", strictPort: true, watch: { ignored: ["**/.next*/**", "**/.npm-cache/**", "**/test-results*/**", "**/performance-results/**", "**/pwa-test-results/**", "**/dist*/**", "**/tests/**", "**/docs/**", "**/scripts/**", "**/*.md"] } },
+    server: { host: "0.0.0.0", strictPort: true, hmr: { clientPort: 443 }, watch: { ignored: ["**/.next*/**", "**/.npm-cache/**", "**/test-results*/**", "**/performance-results/**", "**/pwa-test-results/**", "**/dist*/**", "**/tests/**", "**/docs/**", "**/scripts/**", "**/*.md"] } },
     build: { outDir: buildDir },
     environments: {
       rsc: { build: { outDir: `${buildDir}/rsc`, rollupOptions: { input: { index: "./server/entry.rsc.tsx" } } } },
       ssr: { build: { outDir: `${buildDir}/ssr`, rollupOptions: { input: { index: "./server/entry.ssr.tsx" } } } },
-      client: { build: { outDir: `${buildDir}/client`, rollupOptions: { input: { index: "./client/entry.tsx" } } } },
+      // iPhone 7/7 Plus remain on iOS 15; the default Safari 16.4 target
+      // leaves class static blocks in Radix, preventing hydration on these phones.
+      client: { build: { target: ["chrome111", "edge111", "firefox114", "safari15.4", "ios15.4"], outDir: `${buildDir}/client`, rollupOptions: { input: { index: "./client/entry.tsx" } } } },
     },
   };
 });

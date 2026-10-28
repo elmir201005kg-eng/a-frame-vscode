@@ -54,6 +54,7 @@ export async function quoteStay(
     !cabin.location.region.isActive
   )
     fail("cabinUnavailable");
+  if (!cabin.isBookable) fail("cabinNotBookable");
   if (cabin.isDemo && !demoModeEnabled()) fail("demoUnavailable");
   if (guests > cabin.maxGuests) fail("invalidGuests");
   const [collision, calendar] = await Promise.all([
