@@ -85,7 +85,7 @@ export default async function BookingPage({
                 alt={cabin.images[0].alt}
                 fill
                 loading="eager"
-                sizes="(max-width:767px) 92vw, 360px"
+                sizes="(max-width:1023px) 92vw, 360px"
               />
             </div>
           )}

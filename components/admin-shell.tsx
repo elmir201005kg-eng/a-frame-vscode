@@ -57,12 +57,24 @@ export function AdminShell({ locale, text, common, language, name, notifications
 }) {
   const pathname = usePathname(), router = useRouter();
   const navigation = useRouterState();
-  const [collapsed, setCollapsed] = useState(false), [refreshing, startRefresh] = useTransition();
+  const [collapsed, setCollapsed] = useState(false), [drawerOpen, setDrawerOpen] = useState(false), [refreshing, startRefresh] = useTransition();
   const drawer = useRef<HTMLDialogElement>(null), searchButton = useRef<HTMLDivElement>(null);
   const section = adminSectionFromPathname(pathname), activeSection = adminParentSection(section);
   const label = (key: string) => key === "dashboard" ? common.nav.home : key === "cabins" ? common.nav.catalog : common.nav[key as keyof typeof common.nav];
   const title = label(section) || common.nav.admin;
   const publicRoot = process.env.NODE_ENV !== "production" && locale === "kg" ? "" : `/${locale}`;
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [drawerOpen]);
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => { if (desktop.matches) drawer.current?.close(); };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if (event.key === "/" && !(event.target instanceof Element && event.target.closest("input,textarea,[contenteditable]"))) {
@@ -88,10 +100,10 @@ export function AdminShell({ locale, text, common, language, name, notifications
   return <div className="admin-shell" data-collapsed={collapsed || undefined}>
     <a className="skip-link" href="#admin-main">{text.shell.skip}</a>
     <aside className="admin-sidebar">{sidebar()}</aside>
-    <dialog ref={drawer} className="admin-drawer" aria-label={common.nav.admin} onClick={event => { if (event.target === event.currentTarget) drawer.current?.close(); }}>{sidebar(true)}</dialog>
+    <dialog ref={drawer} id="admin-mobile-navigation" className="admin-drawer" aria-label={common.nav.admin} onClose={() => setDrawerOpen(false)} onClick={event => { if (event.target === event.currentTarget) drawer.current?.close(); }}>{sidebar(true)}</dialog>
     <div className="admin-workspace">
       <header className="admin-topbar">
-        <button className="admin-mobile-menu admin-icon-button" aria-label={text.shell.menu} onClick={() => drawer.current?.showModal()}><Menu size={21} /></button>
+        <button className="admin-mobile-menu admin-icon-button" aria-label={text.shell.menu} aria-controls="admin-mobile-navigation" aria-expanded={drawerOpen} aria-haspopup="dialog" onClick={() => { drawer.current?.showModal(); setDrawerOpen(true); }}><Menu size={21} /></button>
         <div className="admin-breadcrumb"><Link href={`/${locale}/admin`}>A-FRAME KG</Link><ChevronRight size={13} /><span>{title}</span></div>
         <div className="admin-topbar-actions">
           <div ref={searchButton}><AdminSearch locale={locale} text={text.shell} nav={common.nav} /></div>

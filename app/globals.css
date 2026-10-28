@@ -1086,3 +1086,82 @@ a.booking-list-card:hover { border-color: var(--line-strong); background: var(--
 
 @font-face { font-family: "Manrope"; src: url("/fonts/manrope-variable.ttf") format("truetype"); font-weight: 200 800; font-style: normal; font-display: swap; }
 :root { --font-manrope: "Manrope", sans-serif; }
+
+/* Public layouts keep comfortable gutters and touch targets on smaller screens. */
+.header-inner > *, .hero-content, .story-content, .owner-copy, .faq-intro, .faq-list {
+  min-width: 0;
+}
+.hero-explore > span { flex-shrink: 0; }
+.mobile-navigation { overscroll-behavior: contain; }
+.mobile-navigation > a { gap: 16px; overflow-wrap: anywhere; }
+
+@media (max-width: 1023px) {
+  .section-shell { width: calc(100% - 48px); }
+  .owner-section { flex-direction: column; align-items: flex-start; }
+  .owner-action { align-items: flex-start; max-width: 100%; }
+  .owner-action > span { text-align: left; }
+  .footer-nav a, .footer-contact > a { min-height: 44px; }
+  .footer-social, .footer-back-top { width: 44px; height: 44px; }
+  .footer-nav ul, .footer-contact { gap: 2px; }
+}
+
+@media (max-width: 767px) {
+  :root { --site-header-height: 64px; }
+  .section-shell, .search-wrap { width: calc(100% - 32px); }
+  .header-inner { gap: 8px; }
+  .site-header .header-actions { gap: 4px; }
+  .site-header .language-switcher { width: 80px; min-width: 80px; }
+  .site-header .language-switcher .premium-control { min-height: 44px; padding-inline: 6px; }
+  .mobile-navigation { padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+  .header-account-name { overflow-wrap: anywhere; }
+
+  .hero-content { padding: 64px 20px 24px; }
+  .hero h1 { font-size: clamp(34px, 8.6vw, 54px); letter-spacing: -1.5px; }
+  .hero-location { position: static; margin: 0 20px 12px; }
+  .hero-image-note { position: static; display: block; margin: 0 20px 64px; }
+  .hero-actions > a { min-width: 0; }
+  .hero-explore, .owner-action .button { white-space: normal; }
+  .story-caption { padding: 12px 14px; }
+  .story-values > span { min-width: 0; overflow-wrap: break-word; }
+  .faq-item summary { min-height: 56px; }
+  .footer-copyright { white-space: normal; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .home-page-content .cabin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 599px) {
+  .destination-grid { grid-template-columns: minmax(0, 1fr); }
+  .destination-card { aspect-ratio: 1.4; min-height: 210px; max-height: none; }
+  .destination-content { inset: auto 20px 22px; }
+  .destination-content :is(h2, h3) { font-size: 27px; }
+  .destination-content p { font-size: 12px; }
+  .footer-top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "brand brand" "discover information" "contact contact" "social social";
+    gap: 20px 16px;
+    padding-block: 24px;
+  }
+  .footer-heading { overflow-wrap: break-word; }
+  .footer-contact { display: flex; }
+  .footer-contact > a, .footer-address { gap: 10px; align-items: center; }
+  .footer-contact svg { width: 18px; height: 18px; margin: 0; }
+  .footer-brand p { max-width: 100%; }
+}
+
+@media (max-width: 479px) {
+  .site-header .brand-mark { width: 36px; height: 36px; }
+  .site-header .brand-wordmark { font-size: 20px; letter-spacing: -.8px; }
+}
+
+@media (max-width: 359px) {
+  .site-header .brand-wordmark { display: none; }
+  .hero-eyebrow { letter-spacing: 1px; }
+  .hero-actions { align-items: stretch; flex-direction: column; }
+  .hero-explore { justify-content: space-between; }
+}
+
+@media (pointer: coarse) {
+  .cabin-card:hover { transform: none; }
+}

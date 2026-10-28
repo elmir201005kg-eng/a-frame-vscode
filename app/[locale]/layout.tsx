@@ -9,6 +9,7 @@ import "../globals.css";
 import "../forms.css";
 import "../ai-widget.css";
 import "../gallery.css";
+import "../platform-responsive.css";
 
 export default async function RootLayout({ children, params, metadata, navigation }: LayoutProps & { metadata?: Metadata; navigation?: ReactNode }) {
   const { locale } = await params;

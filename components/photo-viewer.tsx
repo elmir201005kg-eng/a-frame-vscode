@@ -16,6 +16,7 @@ export function PhotoViewer({ images, index, onIndexChange, onClose, labels, chi
   children?: ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const swipe = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const titleId = useId();
   const photo = images[index];
   const [dimensions, setDimensions] = useState<{ src: string; ratio: number } | null>(null);
@@ -48,8 +49,24 @@ export function PhotoViewer({ images, index, onIndexChange, onClose, labels, chi
           <span aria-live="polite" aria-atomic="true">{index + 1} / {images.length}</span>
           <button type="button" autoFocus aria-label={labels.close} onClick={() => dialog.current?.close()}><Icon name="x" size={24} /></button>
         </div>
-        <div className="photo-viewer-stage" style={{ aspectRatio: dimensions?.src === photo.src ? dimensions.ratio : 1.5 }}>
-          <Image key={photo.id} src={photo.src} alt={photo.alt} fill sizes="96vw" loading="eager"
+        <div className="photo-viewer-stage" style={{ aspectRatio: dimensions?.src === photo.src ? dimensions.ratio : 1.5 }}
+          onPointerDown={event => {
+            if (event.pointerType !== "touch" || !event.isPrimary || (event.target as Element).closest("button")) {
+              swipe.current = null;
+              return;
+            }
+            swipe.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+          }}
+          onPointerCancel={() => { swipe.current = null; }}
+          onPointerUp={event => {
+            const start = swipe.current;
+            swipe.current = null;
+            if (!start || start.pointerId !== event.pointerId || images.length < 2) return;
+            const horizontal = event.clientX - start.x;
+            const vertical = event.clientY - start.y;
+            if (Math.abs(horizontal) >= 48 && Math.abs(horizontal) > Math.abs(vertical) * 1.5) move(horizontal < 0 ? 1 : -1);
+          }}>
+          <Image key={photo.id} src={photo.src} alt={photo.alt} fill sizes="96vw" loading="eager" draggable={false}
             onLoad={event => {
               const image = event.currentTarget;
               if (image.naturalHeight) setDimensions({ src: photo.src, ratio: image.naturalWidth / image.naturalHeight });

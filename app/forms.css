@@ -53,7 +53,7 @@ input.premium-validation-input, .product-field input.premium-validation-input {
 .premium-select-trigger, .premium-date-trigger, .premium-guest-trigger, .premium-filter-trigger {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
 }
-.premium-select-trigger > span:first-child, .premium-date-trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.premium-select-trigger > span:first-child, .premium-date-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .premium-chevron { display: flex; align-items: center; color: var(--form-accent); flex-shrink: 0; transition: transform .18s ease; }
 [data-state="open"] > .premium-chevron { transform: rotate(180deg); }
 .premium-date-trigger > svg, .premium-guest-value > svg { color: var(--form-accent); }
@@ -112,7 +112,7 @@ input.premium-choice:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(2
 input.premium-choice:disabled { opacity: .4; cursor: not-allowed; }
 .premium-radio-group legend { padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 550; }
 .premium-radio-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.premium-radio-card { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 12px; border: 1px solid var(--form-border); border-radius: 12px; background: var(--form-background); font-size: 13px; cursor: pointer; }
+.premium-radio-card { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 54px; padding: 12px; border: 1px solid var(--form-border); border-radius: 12px; background: var(--form-background); font-size: 13px; overflow-wrap: anywhere; cursor: pointer; }
 .premium-radio-card:hover { border-color: rgba(220,201,163,.4); }
 .premium-radio-card:has(input:checked) { border-color: rgba(220,201,163,.6); background: rgba(220,201,163,.05); color: var(--form-accent); }
 .premium-radio-card:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(220,201,163,.14); }
@@ -120,13 +120,14 @@ input.premium-choice:disabled { opacity: .4; cursor: not-allowed; }
 .checkbox-list label:hover, .checkbox-label:hover { color: var(--form-accent); }
 
 .premium-popover-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; }
-.premium-icon-button { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 9px; color: var(--form-muted); flex-shrink: 0; }
+.premium-popover-heading > strong { min-width: 0; overflow-wrap: anywhere; }
+.premium-icon-button { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 9px; color: var(--form-muted); flex-shrink: 0; }
 .premium-icon-button:hover { color: var(--form-accent); background: var(--form-hover); }
-.premium-popover-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--form-border); }
+.premium-popover-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--form-border); }
 .premium-popover-footer .button { min-height: 44px; padding: 10px 20px; }
 .premium-clear-button { min-height: 44px; padding: 8px 10px; border-radius: 8px; color: var(--form-muted); font-size: 13px; }
 .premium-clear-button:hover { color: var(--form-accent); background: var(--form-hover); }
-.premium-calendar-popover { width: 350px; max-height: min(640px, var(--radix-popover-content-available-height)); overflow-y: auto; overscroll-behavior: contain; padding: 14px; }
+.premium-calendar-popover { width: 350px; max-height: min(640px, var(--radix-popover-content-available-height, calc(100dvh - 24px))); overflow-y: auto; overscroll-behavior: contain; padding: 14px; }
 .premium-calendar-hint { color: var(--form-muted); font-size: 12px; line-height: 1.6; margin: 5px 0; }
 .premium-date-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
 .availability-calendar .calendar-heading { margin-top: 8px; font-size: 14px; }

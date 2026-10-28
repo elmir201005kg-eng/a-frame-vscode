@@ -69,6 +69,20 @@
   .af-ai-launcher { transition: none; }
 }
 
+@media (max-width: 767px) {
+  .af-ai-iconButton { flex-basis: 44px; width: 44px; height: 44px; }
+  .af-ai-send { flex-basis: 44px; width: 44px; height: 44px; }
+  .af-ai-panel { min-height: 0; }
+  .af-ai-header { gap: 6px; }
+  .af-ai-status { flex-wrap: wrap; }
+  .af-ai-status > span:last-child { white-space: normal; }
+}
+
+@media (max-width: 359px) {
+  .af-ai-avatar { display: none; }
+  .af-ai-quick { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Keep the two floating controls accessible when a PWA install offer is present. */
 body:has(.pwa-install) [data-ai-widget] { bottom: max(92px, calc(env(safe-area-inset-bottom) + 80px)); }
 body:has([data-ai-widget][data-open="true"]) .pwa-install { display: none; }

@@ -149,7 +149,7 @@ export default async function AccountPage({
       <>
         <p className="product-notice">{common.labels.paymentPending}</p>
         {rows.length ? (
-          <div className="records-table-wrap">
+          <div className="records-table-wrap" tabIndex={0} role="region" aria-label={common.nav.payments}>
             <table className="records-table">
               <thead>
                 <tr>

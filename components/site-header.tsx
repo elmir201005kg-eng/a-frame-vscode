@@ -46,6 +46,14 @@ export function SiteHeader({
     { href: `/${locale}/account?tab=settings`, label: text.settings, icon: "settings" as const },
   ];
   useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1280px)");
+    const closeMobileMenu = (event: MediaQueryListEvent) => {
+      if (event.matches) setMenuOpen(false);
+    };
+    desktop.addEventListener("change", closeMobileMenu);
+    return () => desktop.removeEventListener("change", closeMobileMenu);
+  }, []);
+  useEffect(() => {
     if (!accountOpen) return;
     const outside = (event: PointerEvent) => {
       if (event.target instanceof Node && !accountRef.current?.contains(event.target)) setAccountOpen(false);

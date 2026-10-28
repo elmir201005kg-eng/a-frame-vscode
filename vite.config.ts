@@ -9,9 +9,22 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ""));
   const buildDir = process.env.BUILD_DIR || "dist";
   return {
-    plugins: [rsc(), react(), tailwindcss()],
+    plugins: [
+      {
+        name: "allow-external-hosts",
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            // Allow requests from any host
+            next();
+          });
+        },
+      },
+      rsc(),
+      react(),
+      tailwindcss()
+    ],
     resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
-    server: { host: "0.0.0.0", strictPort: true, hmr: { clientPort: 443 }, watch: { ignored: ["**/.next*/**", "**/.npm-cache/**", "**/test-results*/**", "**/performance-results/**", "**/pwa-test-results/**", "**/dist*/**", "**/tests/**", "**/docs/**", "**/scripts/**", "**/*.md"] } },
+    server: { host: "0.0.0.0", strictPort: true, hmr: { clientPort: 443 }, allowedHosts: ["discusses-guns-miles-visitor.trycloudflare.com"], watch: { ignored: ["**/.next*/**", "**/.npm-cache/**", "**/test-results*/**", "**/performance-results/**", "**/pwa-test-results/**", "**/dist*/**", "**/tests/**", "**/docs/**", "**/scripts/**", "**/*.md"] } },
     build: { outDir: buildDir },
     environments: {
       rsc: { build: { outDir: `${buildDir}/rsc`, rollupOptions: { input: { index: "./server/entry.rsc.tsx" } } } },
